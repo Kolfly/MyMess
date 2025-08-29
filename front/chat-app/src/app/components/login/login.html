@@ -1,0 +1,77 @@
+<div class="login-container">
+  <div class="login-card-wrapper">
+    <mat-card class="login-card">
+      <mat-card-header>
+        <mat-card-title>
+          <div class="title-wrapper">
+            <mat-icon class="chat-icon">chat</mat-icon>
+            <span>MyMess Chat</span>
+          </div>
+        </mat-card-title>
+        <mat-card-subtitle>Connectez-vous pour démarrer une conversation</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+          <!-- Email -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Email</mat-label>
+            <input 
+              matInput 
+              type="email" 
+              formControlName="email"
+              placeholder="votre.email@exemple.com"
+              autocomplete="email">
+            <mat-icon matSuffix>email</mat-icon>
+            <mat-error *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+              {{ getEmailErrorMessage() }}
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Mot de passe -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Mot de passe</mat-label>
+            <input 
+              matInput 
+              [type]="hidePassword ? 'password' : 'text'"
+              formControlName="password"
+              placeholder="Votre mot de passe"
+              autocomplete="current-password">
+            <button 
+              mat-icon-button 
+              matSuffix 
+              type="button"
+              (click)="hidePassword = !hidePassword"
+              [attr.aria-label]="'Afficher le mot de passe'"
+              [attr.aria-pressed]="!hidePassword">
+              <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+              {{ getPasswordErrorMessage() }}
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Bouton de connexion -->
+          <button 
+            mat-raised-button 
+            color="primary" 
+            type="submit"
+            class="login-button full-width"
+            [disabled]="isLoading">
+            <span *ngIf="!isLoading">Se connecter</span>
+            <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+          </button>
+        </form>
+      </mat-card-content>
+
+      <mat-card-actions class="card-actions">
+        <p class="register-text">
+          Pas encore de compte ?
+          <button mat-button color="accent" (click)="goToRegister()">
+            S'inscrire
+          </button>
+        </p>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

@@ -1,13 +1,69 @@
-Ce qui nous manque encore pour un chat complet
-Pour transformer cette infrastructure robuste en un système de chat véritablement utilisable, 
-il nous reste à implémenter plusieurs couches fonctionnelles.
- Nous devons créer le système d'authentification complet qui permettra aux 
- utilisateurs de créer des comptes, se connecter de manière sécurisée, 
- et maintenir des sessions authentifiées. Ce système inclut la création de modèles de données
- pour les utilisateurs, les services de hashage de mots de passe, la génération et validation de tokens JWT, 
- et toutes les routes API nécessaires.
-Nous devons également construire le système de messagerie proprement dit, 
-avec des modèles pour les conversations et les messages, la logique pour créer et gérer des discussions privées ou de groupe,
- et l'intégration entre l'API REST et les WebSockets pour que les messages soient instantanément distribués à tous les participants 
- d'une conversation.
-Finalement, nous aurons besoin d'un frontend Angular qui utilise toutes ces capacités backend pour créer une interface utilisateur intuitive et réactive.
+
+
+  👤 En tant qu'utilisateur non connecté :
+
+  
+
+  
+
+
+
+  💬 En tant qu'utilisateur connecté :
+
+  
+
+  
+
+  
+
+ 
+
+ // US009 - Statut de lecture
+  En tant qu'utilisateur, je veux voir si mes messages ont été lus et marquer les messages reçus comme lus.
+
+  //US010 - Indicateur de frappe
+  En tant qu'utilisateur, je veux voir quand quelqu'un tape un message ("Alice tape...").
+
+  //US022 - en tant q'utilisateur, je veux pouvoir accepter ou refuser si quelqu'un demarre une conversation avec moi si je refuse cela supprime la conversation de ma liste de conversation si j'accepte cela creer et lance la conversation 
+
+  👥 Conversations de groupe :
+
+  US011 - Créer un groupe
+  En tant qu'utilisateur, je veux créer un groupe de discussion en lui donnant un nom et en ajoutant des membres.
+
+  US012 - Gérer un groupe
+  En tant que créateur de groupe, je veux pouvoir ajouter/supprimer des membres et modifier les paramètres.
+
+  ⚙️ Profil et paramètres :
+
+  US013 - Mon profil
+  En tant qu'utilisateur, je veux voir et modifier mon profil (nom d'affichage, statut).
+
+  US014 - Statut en ligne
+  En tant qu'utilisateur, je veux voir qui est en ligne et changer mon propre statut (en ligne/absent/occupé).
+
+  US015 - Déconnexion
+  En tant qu'utilisateur connecté, je veux pouvoir me déconnecter proprement.
+
+  ---
+  🎨 INTERFACE SUGGÉRÉE :
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │  MyMess Chat                                    [👤] [⚙️]   │
+  ├───────────────────┬─────────────────────────────────────────┤
+  │ 💬 Conversations  │  Chat avec Alice                        │
+  ├───────────────────┤                                         │
+  │ Alice 🟢          │  Alice: Salut ! Comment ça va ?         │
+  │ └─ Ça va bien !   │  14:30                                  │
+  │                   │                                         │
+  │ Groupe Dev 👥     │  Moi: Très bien merci ! 😊             │
+  │ └─ Mathieu: Ok !  │  14:32 ✓✓                              │
+  │                   │                                         │
+  │ Bob 🟡           │  Alice tape...                          │
+  │ └─ À plus tard    │                                         │
+  │                   │                                         │
+  ├───────────────────┼─────────────────────────────────────────┤
+  │ [🔍] Rechercher   │ [Tapez votre message...]          [📤] │
+  └───────────────────┴─────────────────────────────────────────┘
+
+  

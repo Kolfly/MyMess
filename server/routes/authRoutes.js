@@ -56,8 +56,26 @@ router.post('/refresh',
   authController.refreshToken
 );
 
+// 📧 VÉRIFICATION D'EMAIL - GET /api/auth/verify/:token
+// Temporairement commenté pour debug
+/*
+router.get('/verify/:token',
+  // Vérification du token d'email
+  authController.verifyEmail
+);
+*/
+
+// 📧 RENVOI D'EMAIL DE VÉRIFICATION - POST /api/auth/resend-verification
+router.post('/resend-verification',
+  // Validation de l'email
+  authValidator.getResendVerificationValidation(),
+  // Renvoyer l'email de vérification
+  authController.resendVerification
+);
+
 // 📧 DEMANDE DE RÉINITIALISATION DE MOT DE PASSE - POST /api/auth/forgot-password
 // Cette route sera utile pour permettre aux utilisateurs de récupérer leur compte
+/*
 router.post('/forgot-password',
   authValidator.getPasswordResetRequestValidation(),
   // TODO: Implémenter le controller pour envoyer un email de reset
@@ -72,7 +90,6 @@ router.post('/forgot-password',
 
 // 🔑 RÉINITIALISATION DE MOT DE PASSE - POST /api/auth/reset-password/:token
 router.post('/reset-password/:token',
-  authValidator.getParamValidation().token,
   authValidator.getPasswordResetValidation(),
   // TODO: Implémenter le controller pour réinitialiser le mot de passe
   (req, res) => {
@@ -83,6 +100,7 @@ router.post('/reset-password/:token',
     });
   }
 );
+*/
 
 // 🔒 ROUTES PROTÉGÉES (authentification requise)
 // Toutes les routes suivantes nécessitent un token d'authentification valide
@@ -117,14 +135,7 @@ router.put('/status',
   authMiddleware,
   authValidator.getUpdateStatusValidation(),
   // Pas besoin de logger cette action (trop fréquente)
-  authController.updateUserStatus || ((req, res) => {
-    // Fallback temporaire si la méthode n'existe pas encore dans le controller
-    res.status(501).json({
-      success: false,
-      message: 'Mise à jour du statut en cours d\'implémentation',
-      code: 'FEATURE_NOT_IMPLEMENTED'
-    });
-  })
+  authController.updateStatus
 );
 
 // 👋 DÉCONNEXION - POST /api/auth/logout

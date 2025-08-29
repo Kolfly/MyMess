@@ -1,0 +1,547 @@
+// ================================================
+// REGISTER COMPONENT - TEAMS DARK THEME
+// ================================================
+
+@import '../../../styles/teams-theme';
+
+.register-container {
+  min-height: 100vh;
+  background: var(--teams-bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--teams-spacing-lg);
+  position: relative;
+  overflow: hidden;
+
+  // Pattern de fond subtil Teams
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+      radial-gradient(circle at 30% 70%, rgba(79, 70, 229, 0.04) 0%, transparent 50%),
+      radial-gradient(circle at 70% 30%, rgba(79, 70, 229, 0.02) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .register-card {
+    @include teams-card;
+    width: 100%;
+    max-width: 500px;
+    border-radius: var(--teams-radius-lg);
+    box-shadow: var(--teams-shadow-xl);
+    overflow: hidden;
+    border: 1px solid var(--teams-border-light);
+    backdrop-filter: blur(10px);
+    position: relative;
+    z-index: 1;
+    animation: fadeInUp 0.7s ease-out;
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--teams-shadow-xl);
+    }
+
+    // Header stylé Teams
+    .register-header {
+      background: linear-gradient(135deg, var(--teams-bg-secondary) 0%, var(--teams-bg-tertiary) 100%);
+      padding: var(--teams-spacing-xxl);
+      text-align: center;
+      border-bottom: 1px solid var(--teams-border-default);
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--teams-primary), transparent);
+        opacity: 0.3;
+      }
+
+      .title-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--teams-spacing-md);
+        margin-bottom: var(--teams-spacing-sm);
+
+        .app-icon {
+          font-size: 36px;
+          width: 36px;
+          height: 36px;
+          color: var(--teams-primary);
+          background: var(--teams-primary-light);
+          border-radius: 50%;
+          padding: var(--teams-spacing-sm);
+          transition: all var(--teams-transition-normal);
+          
+          &:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 6px 16px var(--teams-primary-border);
+          }
+        }
+
+        h1 {
+          color: var(--teams-text-primary);
+          font-size: var(--teams-font-size-xxl);
+          font-weight: var(--teams-font-weight-semibold);
+          margin: 0;
+          letter-spacing: -0.5px;
+        }
+      }
+
+      mat-card-subtitle {
+        color: var(--teams-text-secondary) !important;
+        font-size: var(--teams-font-size-sm);
+        font-weight: var(--teams-font-weight-normal);
+        opacity: 0.9;
+        margin: 0;
+      }
+    }
+
+    .register-content {
+      padding: var(--teams-spacing-xxl);
+      background: var(--teams-surface-primary);
+
+      .register-form {
+        display: flex;
+        flex-direction: column;
+        gap: var(--teams-spacing-lg);
+
+        .full-width {
+          width: 100%;
+        }
+
+        // Ligne pour prénom/nom
+        .name-row {
+          display: flex;
+          gap: var(--teams-spacing-md);
+
+          .half-width {
+            flex: 1;
+          }
+        }
+
+        // Champs de formulaire Teams style
+        mat-form-field {
+          &.mat-form-field-appearance-outline {
+            .mat-mdc-form-field-outline {
+              border-radius: var(--teams-radius-sm);
+              border-color: var(--teams-border-default);
+              transition: all var(--teams-transition-fast);
+            }
+
+            &:hover:not(.mat-focused) {
+              .mat-mdc-form-field-outline {
+                border-color: var(--teams-border-hover);
+                background: rgba(255, 255, 255, 0.02);
+              }
+            }
+
+            &.mat-focused {
+              .mat-mdc-form-field-outline-thick {
+                border-color: var(--teams-primary);
+                box-shadow: 0 0 0 2px var(--teams-primary-light);
+              }
+            }
+          }
+
+          .mat-mdc-form-field-label {
+            color: var(--teams-text-secondary);
+            font-size: var(--teams-font-size-sm);
+            font-weight: var(--teams-font-weight-medium);
+
+            &.mat-focused {
+              color: var(--teams-primary);
+            }
+          }
+
+          .mat-mdc-input-element {
+            color: var(--teams-text-primary);
+            font-size: var(--teams-font-size-base);
+            font-family: var(--teams-font-family);
+            background: transparent;
+            caret-color: var(--teams-primary);
+
+            &::placeholder {
+              color: var(--teams-text-placeholder);
+              opacity: 1;
+            }
+          }
+
+          // Icônes dans les champs
+          .mat-mdc-form-field-icon-suffix {
+            .mat-icon {
+              color: var(--teams-text-tertiary);
+              transition: color var(--teams-transition-fast);
+            }
+          }
+
+          &.mat-focused .mat-mdc-form-field-icon-suffix .mat-icon {
+            color: var(--teams-primary);
+          }
+
+          // Messages d'aide et erreur
+          mat-hint {
+            color: var(--teams-text-tertiary);
+            font-size: var(--teams-font-size-xs);
+            margin-top: var(--teams-spacing-xs);
+          }
+
+          mat-error {
+            color: var(--teams-error);
+            font-size: var(--teams-font-size-xs);
+            font-weight: var(--teams-font-weight-medium);
+            margin-top: var(--teams-spacing-xs);
+            animation: slideInError 0.3s ease-out;
+          }
+        }
+
+        // Section conditions d'utilisation
+        .terms-container {
+          margin: var(--teams-spacing-md) 0;
+          padding: var(--teams-spacing-md);
+          background: var(--teams-bg-tertiary);
+          border-radius: var(--teams-radius-sm);
+          border: 1px solid var(--teams-border-default);
+
+          mat-checkbox {
+            .mdc-checkbox__background {
+              border-color: var(--teams-border-default);
+              border-radius: 2px;
+            }
+
+            &.mat-mdc-checkbox-checked .mdc-checkbox__background {
+              background-color: var(--teams-primary);
+              border-color: var(--teams-primary);
+            }
+
+            .mdc-form-field {
+              color: var(--teams-text-primary);
+              font-size: var(--teams-font-size-sm);
+              line-height: 1.4;
+
+              a {
+                color: var(--teams-primary);
+                text-decoration: none;
+                font-weight: var(--teams-font-weight-medium);
+                transition: all var(--teams-transition-fast);
+
+                &:hover {
+                  color: var(--teams-primary-hover);
+                  text-decoration: underline;
+                }
+              }
+            }
+          }
+
+          .terms-error {
+            color: var(--teams-error);
+            font-size: var(--teams-font-size-xs);
+            margin-top: var(--teams-spacing-xs);
+            display: block;
+            font-weight: var(--teams-font-weight-medium);
+          }
+        }
+
+        // Bouton d'inscription
+        .register-button {
+          @include teams-button-primary;
+          height: 52px;
+          font-size: var(--teams-font-size-base);
+          font-weight: var(--teams-font-weight-semibold);
+          border-radius: var(--teams-radius-md);
+          margin-top: var(--teams-spacing-lg);
+          position: relative;
+          overflow: hidden;
+
+          &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+              90deg,
+              transparent,
+              rgba(255, 255, 255, 0.1),
+              transparent
+            );
+            transition: left 0.6s ease;
+          }
+
+          &:hover:not(:disabled)::before {
+            left: 100%;
+          }
+
+          &:disabled {
+            background: var(--teams-text-disabled);
+            border-color: var(--teams-text-disabled);
+            color: var(--teams-bg-tertiary);
+            cursor: not-allowed;
+
+            &::before {
+              display: none;
+            }
+          }
+
+          .button-spinner {
+            margin-right: var(--teams-spacing-sm);
+            
+            circle {
+              stroke: currentColor;
+            }
+          }
+
+          mat-icon {
+            margin-right: var(--teams-spacing-sm);
+          }
+        }
+
+        // Lien vers connexion
+        .login-link {
+          text-align: center;
+          margin-top: var(--teams-spacing-xl);
+          padding-top: var(--teams-spacing-lg);
+          border-top: 1px solid var(--teams-border-default);
+
+          p {
+            color: var(--teams-text-secondary);
+            font-size: var(--teams-font-size-sm);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--teams-spacing-xs);
+          }
+
+          .link-button {
+            @include teams-button-secondary;
+            padding: var(--teams-spacing-xs) var(--teams-spacing-sm);
+            min-width: auto;
+            font-size: var(--teams-font-size-sm);
+            font-weight: var(--teams-font-weight-semibold);
+            color: var(--teams-primary);
+            border: none;
+            background: transparent;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+
+            &:hover {
+              background: var(--teams-primary-light) !important;
+              color: var(--teams-primary) !important;
+              text-decoration: none;
+              border-radius: var(--teams-radius-sm);
+              transform: translateY(-1px);
+            }
+
+            &:focus {
+              outline: 2px solid var(--teams-primary-border);
+              outline-offset: 2px;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Carte d'informations
+  .additional-info {
+    margin-top: var(--teams-spacing-xl);
+    max-width: 500px;
+    width: 100%;
+
+    .info-card {
+      @include teams-card;
+      background: rgba(45, 45, 48, 0.7);
+      backdrop-filter: blur(15px);
+      border: 1px solid var(--teams-border-default);
+      border-radius: var(--teams-radius-md);
+
+      .features {
+        display: flex;
+        justify-content: space-around;
+        text-align: center;
+        padding: var(--teams-spacing-lg);
+
+        .feature {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: var(--teams-spacing-sm);
+          color: var(--teams-text-secondary);
+          font-size: var(--teams-font-size-sm);
+          font-weight: var(--teams-font-weight-medium);
+          transition: all var(--teams-transition-normal);
+
+          &:hover {
+            color: var(--teams-primary);
+            transform: translateY(-2px);
+          }
+
+          mat-icon {
+            font-size: 28px;
+            height: 28px;
+            width: 28px;
+            opacity: 0.8;
+            background: var(--teams-primary-light);
+            border-radius: 50%;
+            padding: var(--teams-spacing-sm);
+            transition: all var(--teams-transition-normal);
+          }
+
+          &:hover mat-icon {
+            opacity: 1;
+            background: var(--teams-primary);
+            color: white;
+            transform: scale(1.1);
+          }
+        }
+      }
+    }
+  }
+}
+
+// ================================================
+// ANIMATIONS
+// ================================================
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInError {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// ================================================
+// RESPONSIVE DESIGN
+// ================================================
+
+@media (max-width: 600px) {
+  .register-container {
+    padding: var(--teams-spacing-md);
+
+    .register-card {
+      .register-header {
+        padding: var(--teams-spacing-xl);
+
+        .title-container {
+          gap: var(--teams-spacing-sm);
+
+          .app-icon {
+            font-size: 32px;
+            width: 32px;
+            height: 32px;
+          }
+
+          h1 {
+            font-size: var(--teams-font-size-xl);
+          }
+        }
+      }
+
+      .register-content {
+        padding: var(--teams-spacing-xl);
+
+        .register-form {
+          .name-row {
+            flex-direction: column;
+            gap: var(--teams-spacing-lg);
+
+            .half-width {
+              width: 100%;
+            }
+          }
+
+          .register-button {
+            height: 48px;
+          }
+
+          .login-link p {
+            flex-direction: column;
+            gap: var(--teams-spacing-sm);
+          }
+        }
+      }
+    }
+
+    .additional-info .info-card .features {
+      flex-direction: column;
+      gap: var(--teams-spacing-lg);
+
+      .feature {
+        flex-direction: row;
+        justify-content: center;
+        text-align: left;
+      }
+    }
+  }
+}
+
+@media (max-width: 400px) {
+  .register-container {
+    .register-card {
+      .register-header .title-container {
+        flex-direction: column;
+        gap: var(--teams-spacing-sm);
+      }
+    }
+  }
+}
+
+// ================================================
+// FOCUS ET ACCESSIBILITÉ
+// ================================================
+
+.register-button:focus-visible {
+  outline: 3px solid var(--teams-primary-border);
+  outline-offset: 2px;
+}
+
+// Indicateurs pour champs requis
+mat-form-field.mat-form-field-required:not(.mat-form-field-disabled) {
+  .mat-mdc-form-field-label::after {
+    content: ' *';
+    color: var(--teams-error);
+  }
+}
+
+// ================================================
+// STYLES SNACKBARS
+// ================================================
+
+:host ::ng-deep {
+  .success-snackbar {
+    background-color: var(--teams-success) !important;
+    color: white !important;
+  }
+
+  .error-snackbar {
+    background-color: var(--teams-error) !important;
+    color: white !important;
+  }
+}

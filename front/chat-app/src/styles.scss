@@ -1,0 +1,399 @@
+// ================================================
+// STYLES GLOBAUX - THÈME MICROSOFT TEAMS DARK
+// ================================================
+
+// Import Angular Material DOIT être en premier avec @use
+@use '@angular/material' as mat;
+
+// Import du thème Teams
+@import './styles/teams-theme';
+
+// Définir un thème Material personnalisé Teams Dark
+$teams-primary: mat.m2-define-palette((
+  50: #f0f0ff,
+  100: #d9d7ff,
+  200: #b8b4ff,
+  300: #9691ff,
+  400: #7b73ff,
+  500: #4f46e5,  // Couleur principale
+  600: #4338ca,
+  700: #3730a3,
+  800: #312e81,
+  900: #1e1b4b,
+  A100: #8b5cf6,
+  A200: #7c3aed,
+  A400: #6d28d9,
+  A700: #5b21b6,
+  contrast: (
+    50: #000000,
+    100: #000000,
+    200: #000000,
+    300: #000000,
+    400: #ffffff,
+    500: #ffffff,
+    600: #ffffff,
+    700: #ffffff,
+    800: #ffffff,
+    900: #ffffff,
+    A100: #ffffff,
+    A200: #ffffff,
+    A400: #ffffff,
+    A700: #ffffff,
+  )
+));
+
+$teams-accent: mat.m2-define-palette((
+  50: #f0fdf4,
+  100: #dcfce7,
+  200: #bbf7d0,
+  300: #86efac,
+  400: #4ade80,
+  500: #22c55e,
+  600: #16a34a,  // Couleur accent
+  700: #15803d,
+  800: #166534,
+  900: #14532d,
+  A100: #86efac,
+  A200: #4ade80,
+  A400: #22c55e,
+  A700: #16a34a,
+  contrast: (
+    50: #000000,
+    100: #000000,
+    200: #000000,
+    300: #000000,
+    400: #000000,
+    500: #ffffff,
+    600: #ffffff,
+    700: #ffffff,
+    800: #ffffff,
+    900: #ffffff,
+    A100: #000000,
+    A200: #000000,
+    A400: #ffffff,
+    A700: #ffffff,
+  )
+));
+
+$teams-warn: mat.m2-define-palette((
+  50: #fef2f2,
+  100: #fee2e2,
+  200: #fecaca,
+  300: #fca5a5,
+  400: #f87171,
+  500: #ef4444,
+  600: #dc2626,
+  700: #b91c1c,  // Couleur warn
+  800: #991b1b,
+  900: #7f1d1d,
+  A100: #fca5a5,
+  A200: #f87171,
+  A400: #ef4444,
+  A700: #dc2626,
+  contrast: (
+    50: #000000,
+    100: #000000,
+    200: #000000,
+    300: #000000,
+    400: #000000,
+    500: #ffffff,
+    600: #ffffff,
+    700: #ffffff,
+    800: #ffffff,
+    900: #ffffff,
+    A100: #000000,
+    A200: #000000,
+    A400: #ffffff,
+    A700: #ffffff,
+  )
+));
+
+// Définir le thème dark
+$teams-theme: mat.m2-define-dark-theme((
+  color: (
+    primary: $teams-primary,
+    accent: $teams-accent,
+    warn: $teams-warn,
+  ),
+  typography: mat.m2-define-typography-config(
+    $font-family: var(--teams-font-family),
+  ),
+  density: 0,
+));
+
+// Inclure le thème
+@include mat.all-component-themes($teams-theme);
+
+// ================================================
+// STYLES GLOBAUX DE BASE
+// ================================================
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  height: 100%;
+  font-size: 14px; // Base font size Teams
+}
+
+body {
+  height: 100%;
+  font-family: var(--teams-font-family);
+  font-size: var(--teams-font-size-base);
+  font-weight: var(--teams-font-weight-normal);
+  line-height: 1.5;
+  color: var(--teams-text-primary);
+  background-color: var(--teams-bg-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+// ================================================
+// OVERRIDES ANGULAR MATERIAL POUR TEAMS THEME
+// ================================================
+
+// Cards
+.mat-mdc-card {
+  @include teams-card;
+  
+  .mat-mdc-card-header {
+    background: transparent;
+    
+    .mat-mdc-card-title {
+      color: var(--teams-text-primary) !important;
+      font-weight: var(--teams-font-weight-semibold);
+    }
+    
+    .mat-mdc-card-subtitle {
+      color: var(--teams-text-secondary) !important;
+    }
+  }
+}
+
+// Buttons
+.mat-mdc-button, .mat-mdc-raised-button {
+  font-family: var(--teams-font-family) !important;
+  font-weight: var(--teams-font-weight-medium) !important;
+  border-radius: var(--teams-radius-sm) !important;
+  transition: all var(--teams-transition-fast) !important;
+}
+
+.mat-mdc-raised-button.mat-primary {
+  @include teams-button-primary;
+}
+
+.mat-mdc-button.mat-primary {
+  color: var(--teams-primary) !important;
+  
+  &:hover {
+    background: var(--teams-primary-light) !important;
+  }
+}
+
+// Form fields
+.mat-mdc-form-field {
+  font-family: var(--teams-font-family) !important;
+  
+  &.mat-form-field-appearance-outline {
+    .mat-mdc-form-field-outline {
+      color: var(--teams-border-default) !important;
+    }
+    
+    &.mat-focused .mat-mdc-form-field-outline-thick {
+      color: var(--teams-primary) !important;
+    }
+    
+    &:hover:not(.mat-focused) .mat-mdc-form-field-outline {
+      color: var(--teams-border-hover) !important;
+    }
+  }
+  
+  .mat-mdc-form-field-label {
+    color: var(--teams-text-secondary) !important;
+    
+    &.mat-focused {
+      color: var(--teams-primary) !important;
+    }
+  }
+  
+  .mat-mdc-input-element {
+    color: var(--teams-text-primary) !important;
+    caret-color: var(--teams-primary) !important;
+    
+    &::placeholder {
+      color: var(--teams-text-placeholder) !important;
+    }
+  }
+  
+  .mat-mdc-form-field-hint {
+    color: var(--teams-text-tertiary) !important;
+  }
+  
+  .mat-mdc-form-field-error {
+    color: var(--teams-error) !important;
+  }
+}
+
+// Toolbar
+.mat-toolbar {
+  background: var(--teams-bg-secondary) !important;
+  color: var(--teams-text-primary) !important;
+  border-bottom: 1px solid var(--teams-border-default);
+}
+
+// Sidenav
+.mat-sidenav-container {
+  background: var(--teams-bg-primary) !important;
+  color: var(--teams-text-primary) !important;
+}
+
+.mat-sidenav {
+  background: var(--teams-bg-secondary) !important;
+  border-right: 1px solid var(--teams-border-default) !important;
+}
+
+// Lists
+.mat-mdc-list {
+  background: transparent !important;
+  
+  .mat-mdc-list-item {
+    color: var(--teams-text-primary) !important;
+    
+    &:hover {
+      background: var(--teams-surface-hover) !important;
+    }
+    
+    &.selected {
+      background: var(--teams-surface-selected) !important;
+    }
+  }
+}
+
+// Menu
+.mat-mdc-menu-panel {
+  background: var(--teams-surface-primary) !important;
+  border: 1px solid var(--teams-border-default);
+  border-radius: var(--teams-radius-md) !important;
+  box-shadow: var(--teams-shadow-lg) !important;
+}
+
+.mat-mdc-menu-item {
+  color: var(--teams-text-primary) !important;
+  font-family: var(--teams-font-family) !important;
+  
+  &:hover {
+    background: var(--teams-surface-hover) !important;
+  }
+}
+
+// Snackbar
+.mat-mdc-snack-bar-container {
+  border-radius: var(--teams-radius-md) !important;
+  box-shadow: var(--teams-shadow-lg) !important;
+  
+  &.success-snackbar {
+    background: var(--teams-success) !important;
+    color: white !important;
+  }
+  
+  &.error-snackbar {
+    background: var(--teams-error) !important;
+    color: white !important;
+  }
+  
+  &.warning-snackbar {
+    background: var(--teams-warning) !important;
+    color: white !important;
+  }
+  
+  &.info-snackbar {
+    background: var(--teams-info) !important;
+    color: white !important;
+  }
+}
+
+// Checkbox
+.mat-mdc-checkbox {
+  .mdc-checkbox__background {
+    border-color: var(--teams-border-default) !important;
+  }
+  
+  &.mat-mdc-checkbox-checked .mdc-checkbox__background {
+    background-color: var(--teams-primary) !important;
+    border-color: var(--teams-primary) !important;
+  }
+  
+  .mdc-form-field {
+    color: var(--teams-text-primary) !important;
+  }
+}
+
+// Spinner
+.mat-mdc-progress-spinner {
+  circle {
+    stroke: var(--teams-primary) !important;
+  }
+}
+
+// Icons
+.mat-icon {
+  color: inherit !important;
+}
+
+// ================================================
+// SCROLLBARS GLOBALES
+// ================================================
+
+* {
+  @include teams-scrollbar;
+}
+
+// ================================================
+// CLASSES UTILITAIRES
+// ================================================
+
+.full-width {
+  width: 100% !important;
+}
+
+.full-height {
+  height: 100% !important;
+}
+
+.flex {
+  display: flex !important;
+}
+
+.flex-column {
+  flex-direction: column !important;
+}
+
+.flex-center {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+.text-left {
+  text-align: left !important;
+}
+
+.text-right {
+  text-align: right !important;
+}
+
+.pointer {
+  cursor: pointer !important;
+}
+
+.no-select {
+  user-select: none !important;
+}

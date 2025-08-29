@@ -1,59 +1,75 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
-// Utilitaires pour la gestion des tokens JWT
-// JWT = JSON Web Token : un standard pour transmettre des informations de manière sécurisée
+// Utilitaires pour la gestion des tokens JWT dans notre système d'authentification
+// JWT = JSON Web Token : un standard sécurisé pour transmettre des informations d'identité
 
-class JWTUtils {
+class JWTUtilities {
   
-  // 🎫 GÉNÉRATION D'UN TOKEN D'ACCÈS
-  // Crée un token que l'utilisateur utilisera pour prouver son identité
-  generateAccessToken(userId, additionalPayload = {}) {
+  // ================================================
+  // GÉNÉRATION DE TOKENS D'ACCÈS
+  // ================================================
+  
+  // Générer un token d'accès principal pour un utilisateur authentifié
+  // Ce token sert de "badge d'accès" que l'utilisateur présente à chaque requête
+  generateAccessToken(userId, additionalData = {}) {
     try {
-      // Le payload contient les informations qu'on veut inclure dans le token
-      // ATTENTION: Ces infos ne sont pas chiffrées, juste signées ! Ne pas y mettre d'infos sensibles
+      // Le payload contient les informations que nous voulons encoder dans le token
+      // ATTENTION : ces données ne sont pas chiffrées, seulement signées !
+      // Ne jamais inclure d'informations sensibles comme des mots de passe
       const payload = {
-        userId: userId,                    // L'ID de l'utilisateur (essentiel)
-        type: 'access',                    // Type de token (pour différencier access et refresh)
-        iat: Math.floor(Date.now() / 1000), // Timestamp de création
-        ...additionalPayload               // Infos supplémentaires si nécessaire
+        // Informations standard JWT (claims standards)
+        userId: userId,                           // L'identifiant de l'utilisateur
+        type: 'access',                          // Type de token pour différencier access/refresh
+        iat: Math.floor(Date.now() / 1000),     // Issued At : moment de création
+        jti: crypto.randomUUID(),               // JWT ID : identifiant unique du token
+        
+        // Informations supplémentaires si fournies
+        ...additionalData
       };
 
-      // On signe le token avec notre clé secrète
-      // Seul notre serveur peut vérifier l'authenticité de ce token
+      // Signer le token avec notre clé secrète
+      // La signature garantit que le token n'a pas été modifié
       const token = jwt.sign(
         payload,
-        process.env.JWT_SECRET,            // Clé secrète (JAMAIS la révéler!)
+        process.env.JWT_SECRET,                 // Clé secrète stockée dans les variables d'environnement
         {
-          expiresIn: process.env.JWT_EXPIRE || '7d',  // Durée de vie du token
-          algorithm: 'HS256',              // Algorithme de signature (sécurisé)
-          issuer: 'chatapp-api',           // Qui a émis ce token
-          audience: 'chatapp-users'        // Pour qui ce token est destiné
+          expiresIn: process.env.JWT_EXPIRE || '24h',  // Durée de vie du token
+          algorithm: 'HS256',                   // Algorithme de signature (sécurisé et performant)
+          issuer: 'chatapp-api',               // Qui a émis ce token (notre application)
+          audience: 'chatapp-users'            // Pour qui ce token est destiné (nos utilisateurs)
         }
       );
 
       return token;
 
     } catch (error) {
-      console.error('Erreur génération token:', error);
+      console.error('Erreur lors de la génération du token d\'accès:', error);
       throw new Error('Impossible de générer le token d\'authentification');
     }
   }
 
-  // 🔄 GÉNÉRATION D'UN REFRESH TOKEN
-  // Token à durée de vie plus longue pour renouveler les access tokens
+  // ================================================
+  // GÉNÉRATION DE REFRESH TOKENS
+  // ================================================
+  
+  // Les refresh tokens permettent de renouveler les access tokens expirés
+  // sans demander à l'utilisateur de se reconnecter
+  // Ils ont une durée de vie plus longue mais des privilèges plus limités
   generateRefreshToken(userId) {
     try {
       const payload = {
         userId: userId,
-        type: 'refresh',
-        iat: Math.floor(Date.now() / 1000)
+        type: 'refresh',                        // Type spécifique pour les refresh tokens
+        iat: Math.floor(Date.now() / 1000),
+        jti: crypto.randomUUID()               // Chaque refresh token a un ID unique
       };
 
       const refreshToken = jwt.sign(
         payload,
-        process.env.JWT_SECRET,
+        process.env.JWT_SECRET,                 // Même clé secrète mais payload différent
         {
-          expiresIn: process.env.JWT_REFRESH_EXPIRE || '30d', // Plus long que l'access token
+          expiresIn: process.env.JWT_REFRESH_EXPIRE || '7d',  // Plus long que l'access token
           algorithm: 'HS256',
           issuer: 'chatapp-api',
           audience: 'chatapp-users'
@@ -63,29 +79,41 @@ class JWTUtils {
       return refreshToken;
 
     } catch (error) {
-      console.error('Erreur génération refresh token:', error);
+      console.error('Erreur lors de la génération du refresh token:', error);
       throw new Error('Impossible de générer le refresh token');
     }
   }
 
-  // ✅ VÉRIFICATION D'UN TOKEN
-  // Vérifie qu'un token est valide et retourne les informations qu'il contient
-  verifyToken(token, tokenType = 'access') {
+  // ================================================
+  // VÉRIFICATION ET DÉCODAGE DE TOKENS
+  // ================================================
+  
+  // Vérifier qu'un token est valide et récupérer les informations qu'il contient
+  // Cette fonction effectue plusieurs vérifications de sécurité
+  verifyToken(token, expectedType = 'access') {
     try {
-      if (!token) {
-        throw new Error('Token manquant');
+      if (!token || typeof token !== 'string') {
+        throw new Error('Token manquant ou format invalide');
       }
 
-      // Vérifier et décoder le token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET, {
-        issuer: 'chatapp-api',
-        audience: 'chatapp-users',
-        algorithms: ['HS256']              // On accepte seulement l'algorithme qu'on utilise
+      // Nettoyer le token au cas où il contiendrait le préfixe "Bearer "
+      const cleanToken = token.replace(/^Bearer\s+/, '');
+
+      // Vérifier et décoder le token avec notre clé secrète
+      const decoded = jwt.verify(cleanToken, process.env.JWT_SECRET, {
+        issuer: 'chatapp-api',                  // Vérifier que c'est notre application qui l'a émis
+        audience: 'chatapp-users',              // Vérifier qu'il est destiné à nos utilisateurs
+        algorithms: ['HS256']                   // Accepter seulement notre algorithme de signature
       });
 
       // Vérifier que c'est le bon type de token
-      if (decoded.type !== tokenType) {
-        throw new Error(`Type de token incorrect. Attendu: ${tokenType}, reçu: ${decoded.type}`);
+      if (decoded.type !== expectedType) {
+        throw new Error(`Type de token incorrect. Attendu: ${expectedType}, reçu: ${decoded.type || 'non défini'}`);
+      }
+
+      // Vérifications supplémentaires de sécurité
+      if (!decoded.userId) {
+        throw new Error('Token invalide : identifiant utilisateur manquant');
       }
 
       // Vérifier que le token n'est pas expiré (jwt.verify le fait déjà, mais on double-check)
@@ -97,166 +125,234 @@ class JWTUtils {
       return decoded;
 
     } catch (error) {
-      // Gestion des différents types d'erreurs JWT
+      // Transformer les erreurs JWT en messages plus compréhensibles
       if (error.name === 'JsonWebTokenError') {
-        throw new Error('Token invalide');
+        throw new Error('Token invalide ou corrompu');
       } else if (error.name === 'TokenExpiredError') {
-        throw new Error('Token expiré');
+        throw new Error('Token expiré, veuillez vous reconnecter');
       } else if (error.name === 'NotBeforeError') {
         throw new Error('Token pas encore valide');
       } else {
-        // Si c'est notre propre erreur, on la relance
+        // Si c'est notre propre erreur personnalisée, la relancer telle quelle
         throw error;
       }
     }
   }
 
-  // 🔍 DÉCODER UN TOKEN SANS LE VÉRIFIER
-  // Utile pour débugger ou récupérer des infos d'un token expiré
-  decodeToken(token) {
+  // ================================================
+  // DÉCODAGE SANS VÉRIFICATION
+  // ================================================
+  
+  // Décoder un token sans vérifier sa signature (utile pour le debugging)
+  // ⚠️ ATTENTION : ne jamais utiliser cette fonction pour l'authentification !
+  decodeTokenUnsafe(token) {
     try {
-      // decode() ne vérifie pas la signature, juste décode le contenu
-      const decoded = jwt.decode(token, { complete: true });
+      const cleanToken = token.replace(/^Bearer\s+/, '');
+      const decoded = jwt.decode(cleanToken, { complete: true });
       
       if (!decoded) {
         throw new Error('Token impossible à décoder');
       }
 
       return {
-        header: decoded.header,     // Infos sur l'algorithme utilisé
-        payload: decoded.payload,   // Les données qu'on a mises dedans
-        signature: 'hidden'         // On cache la signature pour la sécurité
+        header: decoded.header,         // Informations sur l'algorithme de signature
+        payload: decoded.payload,       // Les données que nous avons mises dans le token
+        signature: '[HIDDEN]'           // On cache la signature pour la sécurité
       };
 
     } catch (error) {
-      throw new Error('Token malformé');
+      throw new Error('Token malformé ou corrompu');
     }
   }
 
-  // 📅 VÉRIFIER SI UN TOKEN VA BIENTÔT EXPIRER
-  // Utile pour proposer un refresh automatique avant expiration
-  isTokenExpiringSoon(token, thresholdInMinutes = 15) {
+  // ================================================
+  // VÉRIFICATIONS D'EXPIRATION
+  // ================================================
+  
+  // Vérifier si un token va expirer bientôt
+  // Utile pour proposer un renouvellement proactif à l'utilisateur
+  isTokenExpiringSoon(token, thresholdInMinutes = 10) {
     try {
-      const decoded = this.decodeToken(token);
+      const decoded = this.decodeTokenUnsafe(token);
       
       if (!decoded.payload.exp) {
-        return false; // Si pas d'expiration, il n'expire jamais
+        return false; // Si pas d'expiration définie, il n'expire jamais
       }
 
       const expirationTime = decoded.payload.exp * 1000; // Convertir en millisecondes
       const now = Date.now();
-      const thresholdTime = thresholdInMinutes * 60 * 1000; // Convertir en millisecondes
+      const thresholdTime = thresholdInMinutes * 60 * 1000;
 
+      // Retourne true si le token expire dans moins de X minutes
       return (expirationTime - now) <= thresholdTime;
 
     } catch (error) {
-      // En cas d'erreur, on considère qu'il expire bientôt (par sécurité)
+      // En cas d'erreur de décodage, considérer qu'il expire bientôt par sécurité
       return true;
     }
   }
 
-  // 🔧 EXTRAIRE L'USER ID D'UN TOKEN
-  // Fonction pratique pour récupérer rapidement l'ID utilisateur
+  // Calculer le temps restant avant expiration d'un token
+  getTimeUntilExpiration(token) {
+    try {
+      const decoded = this.decodeTokenUnsafe(token);
+      
+      if (!decoded.payload.exp) {
+        return null; // Pas d'expiration définie
+      }
+
+      const expirationTime = decoded.payload.exp * 1000;
+      const now = Date.now();
+      const timeRemaining = expirationTime - now;
+
+      if (timeRemaining <= 0) {
+        return 0; // Déjà expiré
+      }
+
+      // Retourner le temps restant en secondes
+      return Math.floor(timeRemaining / 1000);
+
+    } catch (error) {
+      return 0; // En cas d'erreur, considérer comme expiré
+    }
+  }
+
+  // ================================================
+  // UTILITAIRES PRATIQUES
+  // ================================================
+  
+  // Extraire rapidement l'ID utilisateur d'un token
   extractUserIdFromToken(token) {
     try {
       const decoded = this.verifyToken(token);
       return decoded.userId;
     } catch (error) {
-      throw new Error('Impossible d\'extraire l\'ID utilisateur du token');
+      throw new Error('Impossible d\'extraire l\'ID utilisateur : ' + error.message);
     }
   }
 
-  // 📋 CRÉER UNE PAIRE DE TOKENS (ACCESS + REFRESH)
-  // Fonction pratique qui crée les deux tokens d'un coup
-  generateTokenPair(userId, additionalPayload = {}) {
+  // Créer une paire complète de tokens (access + refresh)
+  generateTokenPair(userId, additionalData = {}) {
     try {
-      const accessToken = this.generateAccessToken(userId, additionalPayload);
+      const accessToken = this.generateAccessToken(userId, additionalData);
       const refreshToken = this.generateRefreshToken(userId);
 
-      // Calculer les dates d'expiration pour informer le client
-      const accessDecoded = this.decodeToken(accessToken);
-      const refreshDecoded = this.decodeToken(refreshToken);
+      // Calculer les timestamps d'expiration pour informer le client
+      const accessDecoded = this.decodeTokenUnsafe(accessToken);
+      const refreshDecoded = this.decodeTokenUnsafe(refreshToken);
 
       return {
         accessToken: accessToken,
         refreshToken: refreshToken,
-        tokenType: 'Bearer',                    // Type de token (standard OAuth2)
-        expiresIn: accessDecoded.payload.exp,   // Timestamp d'expiration access token
-        refreshExpiresIn: refreshDecoded.payload.exp  // Timestamp d'expiration refresh token
+        tokenType: 'Bearer',                     // Standard OAuth2
+        expiresIn: accessDecoded.payload.exp,    // Timestamp d'expiration access token
+        refreshExpiresIn: refreshDecoded.payload.exp,  // Timestamp d'expiration refresh token
+        issuedAt: Math.floor(Date.now() / 1000)  // Moment de génération
       };
 
     } catch (error) {
-      throw new Error('Impossible de générer la paire de tokens');
+      throw new Error('Impossible de générer la paire de tokens : ' + error.message);
     }
   }
 
-  // 🔄 RENOUVELER UN ACCESS TOKEN AVEC UN REFRESH TOKEN
-  // Permet de générer un nouvel access token sans redemander le mot de passe
+  // Renouveler un access token en utilisant un refresh token valide
   refreshAccessToken(refreshToken) {
     try {
       // Vérifier que le refresh token est valide
       const decoded = this.verifyToken(refreshToken, 'refresh');
       
-      // Générer un nouvel access token avec les mêmes informations
+      // Générer un nouvel access token pour le même utilisateur
       const newAccessToken = this.generateAccessToken(decoded.userId);
+      const newAccessDecoded = this.decodeTokenUnsafe(newAccessToken);
 
       return {
         accessToken: newAccessToken,
         tokenType: 'Bearer',
-        expiresIn: this.decodeToken(newAccessToken).payload.exp
+        expiresIn: newAccessDecoded.payload.exp,
+        issuedAt: Math.floor(Date.now() / 1000)
       };
 
     } catch (error) {
-      throw new Error('Impossible de renouveler le token d\'accès');
+      throw new Error('Impossible de renouveler le token : ' + error.message);
     }
   }
 
-  // 🛡️ VALIDER LA FORCE DE LA CLÉ SECRÈTE
-  // Fonction utile pour s'assurer qu'on utilise une clé secrète suffisamment forte
-  validateJWTSecret() {
+  // ================================================
+  // VALIDATION DE LA CONFIGURATION
+  // ================================================
+  
+  // Vérifier que la clé secrète JWT est suffisamment robuste
+  validateJWTConfiguration() {
     const secret = process.env.JWT_SECRET;
     
     if (!secret) {
-      throw new Error('JWT_SECRET n\'est pas défini dans les variables d\'environnement');
+      throw new Error('❌ JWT_SECRET n\'est pas défini dans les variables d\'environnement');
     }
 
     if (secret.length < 32) {
-      console.warn('⚠️  JWT_SECRET est trop courte (moins de 32 caractères). Considère utiliser une clé plus longue pour la sécurité.');
+      console.warn('⚠️  JWT_SECRET est courte (moins de 32 caractères). Utilise une clé plus longue pour une sécurité optimale.');
     }
 
-    if (secret === 'your-super-secret-jwt-key-change-this-in-production') {
-      throw new Error('🚨 JWT_SECRET utilise encore la valeur par défaut ! Change-la immédiatement !');
+    // Vérifier que ce n'est pas une valeur par défaut dangereuse
+    const dangerousDefaults = [
+      'secret', 'jwt-secret', 'your-secret-key', 'change-me',
+      'your-super-secret-jwt-key-change-this-in-production'
+    ];
+    
+    if (dangerousDefaults.includes(secret.toLowerCase())) {
+      throw new Error('🚨 JWT_SECRET utilise une valeur par défaut dangereuse ! Change-la immédiatement !');
     }
 
-    console.log('✅ JWT_SECRET est correctement configurée');
+    console.log('✅ Configuration JWT validée avec succès');
     return true;
   }
-}
 
-// Créer une instance unique et valider la configuration au démarrage
-const jwtUtils = new JWTUtils();
-
-// Valider la clé secrète au moment de l'importation du module
-try {
-  jwtUtils.validateJWTSecret();
-} catch (error) {
-  console.error('❌ Erreur configuration JWT:', error.message);
-  if (process.env.NODE_ENV === 'production') {
-    process.exit(1); // En production, on arrête tout si la config JWT est incorrecte
+  // Générer une suggestion de clé secrète sécurisée
+  generateSecureSecret(length = 64) {
+    return crypto.randomBytes(length).toString('hex');
   }
 }
 
-// Exporter les fonctions individuelles pour une utilisation simple
+// Créer une instance unique de nos utilitaires JWT
+const jwtUtils = new JWTUtilities();
+
+// Valider la configuration au moment de l'importation
+try {
+  jwtUtils.validateJWTConfiguration();
+} catch (error) {
+  console.error('❌ Erreur de configuration JWT:', error.message);
+  
+  if (error.message.includes('JWT_SECRET n\'est pas défini')) {
+    console.log('💡 Suggestion de clé secrète sécurisée:');
+    console.log('   JWT_SECRET=' + jwtUtils.generateSecureSecret());
+  }
+  
+  // En production, arrêter l'application si la configuration JWT est incorrecte
+  if (process.env.NODE_ENV === 'production') {
+    console.error('🛑 Arrêt de l\'application : configuration JWT invalide');
+    process.exit(1);
+  }
+}
+
+// Exporter les fonctions les plus couramment utilisées pour simplifier l'utilisation
 module.exports = {
-  generateToken: (userId, additionalPayload) => jwtUtils.generateAccessToken(userId, additionalPayload),
+  // Fonctions principales d'authentification
+  generateToken: (userId, additionalData) => jwtUtils.generateAccessToken(userId, additionalData),
   generateRefreshToken: (userId) => jwtUtils.generateRefreshToken(userId),
   verifyToken: (token, type) => jwtUtils.verifyToken(token, type),
-  decodeToken: (token) => jwtUtils.decodeToken(token),
-  isTokenExpiringSoon: (token, threshold) => jwtUtils.isTokenExpiringSoon(token, threshold),
+  
+  // Utilitaires pratiques
   extractUserIdFromToken: (token) => jwtUtils.extractUserIdFromToken(token),
-  generateTokenPair: (userId, additionalPayload) => jwtUtils.generateTokenPair(userId, additionalPayload),
+  generateTokenPair: (userId, additionalData) => jwtUtils.generateTokenPair(userId, additionalData),
   refreshAccessToken: (refreshToken) => jwtUtils.refreshAccessToken(refreshToken),
   
-  // Exporter aussi la classe complète pour usage avancé
-  JWTUtils: jwtUtils
+  // Fonctions de vérification
+  isTokenExpiringSoon: (token, threshold) => jwtUtils.isTokenExpiringSoon(token, threshold),
+  getTimeUntilExpiration: (token) => jwtUtils.getTimeUntilExpiration(token),
+  
+  // Décodage (pour debug uniquement)
+  decodeTokenUnsafe: (token) => jwtUtils.decodeTokenUnsafe(token),
+  
+  // Accès à la classe complète pour usage avancé
+  JWTUtilities: jwtUtils
 };

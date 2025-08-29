@@ -1,0 +1,252 @@
+// ================================================
+// THÈME MICROSOFT TEAMS DARK - VARIABLES
+// ================================================
+
+// Couleurs principales Teams Dark
+:root {
+  // Background colors
+  --teams-bg-primary: #1f1f1f;           // Arrière-plan principal très sombre
+  --teams-bg-secondary: #2d2d30;         // Arrière-plan secondaire (sidebars)
+  --teams-bg-tertiary: #3b3b3d;          // Arrière-plan éléments (cards, inputs)
+  --teams-bg-quaternary: #484644;        // Arrière-plan hover/focus
+  --teams-bg-overlay: rgba(0, 0, 0, 0.7); // Overlay modals
+
+  // Surface colors
+  --teams-surface-primary: #2d2d30;      // Cartes principales
+  --teams-surface-secondary: #3b3b3d;    // Cartes secondaires
+  --teams-surface-hover: #403f3f;        // Hover state
+  --teams-surface-selected: #464775;     // Selected state
+  
+  // Text colors
+  --teams-text-primary: #ffffff;         // Texte principal blanc
+  --teams-text-secondary: #c8c6c4;       // Texte secondaire gris clair
+  --teams-text-tertiary: #a19f9d;        // Texte tertiaire gris
+  --teams-text-disabled: #605e5c;        // Texte désactivé
+  --teams-text-placeholder: #8a8886;     // Placeholder text
+  
+  // Accent colors (Microsoft Blue)
+  --teams-primary: #4f46e5;              // Violet moderne (plus Teams que le bleu)
+  --teams-primary-hover: #6366f1;        // Hover état
+  --teams-primary-light: rgba(79, 70, 229, 0.1); // Version transparente
+  --teams-primary-border: rgba(79, 70, 229, 0.3); // Bordures
+  
+  // Status colors
+  --teams-success: #107c10;              // Vert Teams
+  --teams-success-light: rgba(16, 124, 16, 0.1);
+  --teams-warning: #ff8c00;              // Orange Teams
+  --teams-warning-light: rgba(255, 140, 0, 0.1);
+  --teams-error: #d13438;                // Rouge Teams
+  --teams-error-light: rgba(209, 52, 56, 0.1);
+  --teams-info: #0078d4;                 // Bleu Teams
+  --teams-info-light: rgba(0, 120, 212, 0.1);
+  
+  // Online status colors
+  --teams-online: #6bb700;               // Vert en ligne
+  --teams-away: #ffaa44;                 // Orange absent
+  --teams-busy: #cc4a31;                 // Rouge occupé
+  --teams-offline: #8a8886;              // Gris hors ligne
+  
+  // Border colors
+  --teams-border-default: #3b3b3d;       // Bordure par défaut
+  --teams-border-light: #484644;         // Bordure claire
+  --teams-border-focus: #4f46e5;         // Bordure focus
+  --teams-border-hover: #605e5c;         // Bordure hover
+  
+  // Shadows
+  --teams-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --teams-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4);
+  --teams-shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.5);
+  --teams-shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.6);
+  
+  // Spacing (basé sur le système Teams)
+  --teams-spacing-xs: 4px;
+  --teams-spacing-sm: 8px;
+  --teams-spacing-md: 12px;
+  --teams-spacing-lg: 16px;
+  --teams-spacing-xl: 24px;
+  --teams-spacing-xxl: 32px;
+  
+  // Border radius
+  --teams-radius-sm: 4px;
+  --teams-radius-md: 6px;
+  --teams-radius-lg: 8px;
+  --teams-radius-xl: 12px;
+  
+  // Transitions
+  --teams-transition-fast: 150ms ease-in-out;
+  --teams-transition-normal: 200ms ease-in-out;
+  --teams-transition-slow: 300ms ease-in-out;
+  
+  // Typography
+  --teams-font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --teams-font-size-xs: 11px;
+  --teams-font-size-sm: 12px;
+  --teams-font-size-base: 14px;
+  --teams-font-size-md: 16px;
+  --teams-font-size-lg: 18px;
+  --teams-font-size-xl: 20px;
+  --teams-font-size-xxl: 24px;
+  
+  --teams-font-weight-light: 300;
+  --teams-font-weight-normal: 400;
+  --teams-font-weight-medium: 500;
+  --teams-font-weight-semibold: 600;
+  --teams-font-weight-bold: 700;
+  
+  // Z-index layers
+  --teams-z-dropdown: 1000;
+  --teams-z-sticky: 1020;
+  --teams-z-fixed: 1030;
+  --teams-z-modal-backdrop: 1040;
+  --teams-z-modal: 1050;
+  --teams-z-popover: 1060;
+  --teams-z-tooltip: 1070;
+}
+
+// ================================================
+// MIXINS UTILITAIRES TEAMS
+// ================================================
+
+@mixin teams-card {
+  background: var(--teams-surface-primary);
+  border: 1px solid var(--teams-border-default);
+  border-radius: var(--teams-radius-md);
+  box-shadow: var(--teams-shadow-sm);
+  transition: all var(--teams-transition-normal);
+  
+  &:hover {
+    background: var(--teams-surface-hover);
+    border-color: var(--teams-border-hover);
+    box-shadow: var(--teams-shadow-md);
+  }
+}
+
+@mixin teams-button-primary {
+  background: var(--teams-primary);
+  color: var(--teams-text-primary);
+  border: 1px solid var(--teams-primary);
+  border-radius: var(--teams-radius-sm);
+  padding: var(--teams-spacing-sm) var(--teams-spacing-lg);
+  font-family: var(--teams-font-family);
+  font-size: var(--teams-font-size-base);
+  font-weight: var(--teams-font-weight-medium);
+  transition: all var(--teams-transition-fast);
+  cursor: pointer;
+  
+  &:hover:not(:disabled) {
+    background: var(--teams-primary-hover);
+    border-color: var(--teams-primary-hover);
+    box-shadow: var(--teams-shadow-sm);
+  }
+  
+  &:focus {
+    outline: 2px solid var(--teams-primary-border);
+    outline-offset: 2px;
+  }
+  
+  &:disabled {
+    background: var(--teams-text-disabled);
+    border-color: var(--teams-text-disabled);
+    color: var(--teams-bg-tertiary);
+    cursor: not-allowed;
+  }
+}
+
+@mixin teams-button-secondary {
+  background: transparent;
+  color: var(--teams-text-secondary);
+  border: 1px solid var(--teams-border-default);
+  border-radius: var(--teams-radius-sm);
+  padding: var(--teams-spacing-sm) var(--teams-spacing-lg);
+  font-family: var(--teams-font-family);
+  font-size: var(--teams-font-size-base);
+  font-weight: var(--teams-font-weight-medium);
+  transition: all var(--teams-transition-fast);
+  cursor: pointer;
+  
+  &:hover:not(:disabled) {
+    background: var(--teams-surface-hover);
+    border-color: var(--teams-border-hover);
+    color: var(--teams-text-primary);
+  }
+  
+  &:focus {
+    outline: 2px solid var(--teams-primary-border);
+    outline-offset: 2px;
+  }
+  
+  &:disabled {
+    color: var(--teams-text-disabled);
+    border-color: var(--teams-text-disabled);
+    cursor: not-allowed;
+  }
+}
+
+@mixin teams-input {
+  background: var(--teams-bg-tertiary);
+  color: var(--teams-text-primary);
+  border: 1px solid var(--teams-border-default);
+  border-radius: var(--teams-radius-sm);
+  padding: var(--teams-spacing-sm) var(--teams-spacing-md);
+  font-family: var(--teams-font-family);
+  font-size: var(--teams-font-size-base);
+  transition: all var(--teams-transition-fast);
+  
+  &::placeholder {
+    color: var(--teams-text-placeholder);
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: var(--teams-primary);
+    box-shadow: 0 0 0 2px var(--teams-primary-light);
+    background: var(--teams-surface-primary);
+  }
+  
+  &:hover:not(:focus) {
+    border-color: var(--teams-border-hover);
+    background: var(--teams-surface-hover);
+  }
+  
+  &:disabled {
+    background: var(--teams-bg-secondary);
+    color: var(--teams-text-disabled);
+    border-color: var(--teams-text-disabled);
+    cursor: not-allowed;
+  }
+}
+
+@mixin teams-scrollbar {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: var(--teams-bg-secondary);
+    border-radius: var(--teams-radius-sm);
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: var(--teams-text-disabled);
+    border-radius: var(--teams-radius-sm);
+    transition: background var(--teams-transition-fast);
+    
+    &:hover {
+      background: var(--teams-text-tertiary);
+    }
+  }
+}
+
+// Classes utilitaires
+.teams-text-primary { color: var(--teams-text-primary) !important; }
+.teams-text-secondary { color: var(--teams-text-secondary) !important; }
+.teams-text-tertiary { color: var(--teams-text-tertiary) !important; }
+.teams-text-disabled { color: var(--teams-text-disabled) !important; }
+
+.teams-bg-primary { background-color: var(--teams-bg-primary) !important; }
+.teams-bg-secondary { background-color: var(--teams-bg-secondary) !important; }
+.teams-bg-tertiary { background-color: var(--teams-bg-tertiary) !important; }
+
+.teams-border { border-color: var(--teams-border-default) !important; }
+.teams-border-focus { border-color: var(--teams-border-focus) !important; }

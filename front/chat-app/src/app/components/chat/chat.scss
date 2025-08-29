@@ -1,0 +1,1020 @@
+// Import du thème Teams
+@import '../../../styles/teams-theme';
+@import './modal-styles.scss';
+
+.chat-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chat-toolbar {
+  position: relative;
+  z-index: 10;
+
+  .connection-status {
+    display: flex;
+    align-items: center;
+    margin-right: 16px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    transition: all 0.3s ease;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      margin-right: 4px;
+    }
+
+    &.connected {
+      background-color: rgba(76, 175, 80, 0.2);
+      color: #4caf50;
+
+      .status-text {
+        color: #4caf50;
+      }
+    }
+
+    &.disconnected {
+      background-color: rgba(244, 67, 54, 0.2);
+      color: #f44336;
+
+      .status-text {
+        color: #f44336;
+      }
+    }
+  }
+
+  .spacer {
+    flex: 1 1 auto;
+  }
+
+  .user-info {
+    margin-right: 16px;
+    font-weight: 500;
+  }
+}
+
+.chat-content {
+  flex: 1;
+  overflow: hidden;
+
+  .conversations-sidebar {
+    width: 320px;
+    border-right: 1px solid var(--teams-border-default);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      background: var(--teams-bg-tertiary);
+      border-bottom: 1px solid var(--teams-border-default);
+
+      h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 500;
+        color: var(--teams-text-primary);
+      }
+      
+      .header-actions {
+        display: flex;
+        gap: 8px;
+      }
+    }
+
+    .conversations-list {
+      padding: 0;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+
+      mat-list-item {
+        height: auto !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        
+        &.mat-mdc-list-item {
+          padding: 0 !important;
+          margin: 0;
+          cursor: pointer;
+          transition: background-color 0.2s;
+          border-bottom: 1px solid var(--teams-border-light, #f3f2f1);
+          min-height: 80px;
+          height: auto;
+          display: block;
+          
+          // Override des styles Material par défaut
+          .mat-mdc-list-item-content {
+            padding: 0 !important;
+            height: auto !important;
+          }
+
+          &:hover {
+            background: var(--teams-surface-hover) !important;
+          }
+
+          &.selected {
+            background: var(--teams-surface-selected) !important;
+            border-right: 3px solid var(--teams-primary);
+          }
+
+          .conversation-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 16px;
+            width: 100%;
+            box-sizing: border-box;
+            gap: 12px;
+            min-height: 80px;
+
+            .conversation-avatar {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 48px;
+              height: 48px;
+              border-radius: 50%;
+              background: var(--teams-surface-primary, #f8f8f8);
+              border: 1px solid var(--teams-border-default, #e1e1e1);
+              flex-shrink: 0;
+              position: relative;
+              margin-top: 4px;
+
+              .avatar-initials {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+                color: white;
+                font-size: 16px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                
+                &.group-avatar {
+                  background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+                }
+              }
+
+              mat-icon {
+                color: var(--teams-text-secondary, #616161);
+                font-size: 24px;
+                width: 24px;
+                height: 24px;
+              }
+              
+              .status-indicator {
+                position: absolute;
+                bottom: -2px;
+                right: -2px;
+                font-size: 12px;
+                width: 16px;
+                height: 16px;
+                background: white;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 2px solid white;
+                
+                &.pending {
+                  background: var(--teams-warning, #ff8c00);
+                  color: white;
+                }
+              }
+            }
+
+            .conversation-content {
+              flex: 1;
+              min-width: 0;
+              display: flex;
+              flex-direction: column;
+              gap: 6px;
+              padding-top: 4px;
+
+              .conversation-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                width: 100%;
+
+                .conversation-name {
+                  font-weight: 600;
+                  font-size: 15px;
+                  color: var(--teams-text-primary, #242424);
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                  flex: 1;
+                  line-height: 1.3;
+                  min-width: 0;
+                }
+                
+                .pending-badge {
+                  color: var(--teams-warning, #ff8c00);
+                  font-size: 16px;
+                  flex-shrink: 0;
+                }
+
+                .unread-badge {
+                  font-size: 14px;
+                  color: var(--teams-error, #d13438);
+                  flex-shrink: 0;
+                }
+              }
+
+              .last-message {
+                font-size: 13px;
+                color: var(--teams-text-secondary, #616161);
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                line-height: 1.4;
+                width: 100%;
+
+                .sender {
+                  font-weight: 500;
+                  margin-right: 4px;
+                }
+                
+                .content {
+                  font-weight: 400;
+                }
+              }
+              
+              .pending-message {
+                font-size: 13px;
+                color: var(--teams-warning, #ff8c00);
+                font-style: italic;
+                line-height: 1.4;
+                width: 100%;
+              }
+
+              .last-activity {
+                font-size: 11px;
+                color: var(--teams-text-tertiary, #8a8886);
+                opacity: 0.9;
+                line-height: 1.3;
+              }
+            }
+          }
+          
+          &.pending-conversation {
+            border-left: 3px solid var(--teams-warning, #ff8c00);
+            background: rgba(255, 140, 0, 0.05) !important;
+            
+            &:hover {
+              background: rgba(255, 140, 0, 0.1) !important;
+            }
+          }
+        }
+      }
+    }
+
+    .no-conversations {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 200px;
+      padding: 32px 16px;
+      color: var(--teams-text-secondary);
+      text-align: center;
+
+      mat-icon {
+        font-size: 48px;
+        height: 48px;
+        width: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+        color: var(--teams-text-tertiary);
+      }
+
+      p {
+        margin: 0;
+        font-size: 14px;
+        color: var(--teams-text-secondary);
+        line-height: 1.4;
+      }
+    }
+  }
+
+  .chat-main {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: var(--teams-bg-secondary);
+      border-bottom: 1px solid var(--teams-border-default);
+
+      .conversation-info {
+        display: flex;
+        align-items: center;
+
+        .conversation-icon {
+          margin-right: 16px;
+          color: var(--teams-text-secondary);
+          font-size: 24px;
+        }
+
+        .conversation-details {
+          h4 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--teams-text-primary);
+          }
+
+          .conversation-description {
+            margin: 4px 0 0 0;
+            font-size: 14px;
+            color: var(--teams-text-secondary);
+          }
+        }
+      }
+    }
+
+    .messages-container {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      background: var(--teams-bg-primary);
+
+      .message {
+        display: flex;
+        margin-bottom: 16px;
+
+        &.own-message {
+          justify-content: flex-end;
+
+          .message-bubble {
+            background: var(--teams-primary);
+            color: white;
+
+            .message-footer {
+              .message-time {
+                color: rgba(255, 255, 255, 0.7);
+              }
+
+              .edited-indicator {
+                color: rgba(255, 255, 255, 0.7);
+              }
+              
+              .read-indicators {
+                .read-status {
+                  &.delivered .delivered-icon {
+                    color: rgba(255, 255, 255, 0.7);
+                  }
+                  
+                  &.read {
+                    .read-icon {
+                      color: rgba(255, 255, 255, 0.9);
+                    }
+                    
+                    .read-count {
+                      color: rgba(255, 255, 255, 0.9);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        .message-bubble {
+          max-width: 70%;
+          padding: 12px 16px;
+          border-radius: 18px;
+          background: var(--teams-surface-primary);
+          border: 1px solid var(--teams-border-default);
+          box-shadow: var(--teams-shadow-sm);
+          position: relative;
+
+          .sender-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--teams-primary);
+            margin-bottom: 4px;
+          }
+
+          .message-content {
+            font-size: 14px;
+            line-height: 1.4;
+            word-wrap: break-word;
+            margin-bottom: 6px;
+            color: var(--teams-text-primary);
+          }
+
+          .message-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            
+            .message-time {
+              font-size: 11px;
+              color: var(--teams-text-tertiary);
+            }
+
+            .edited-indicator {
+              font-size: 11px;
+              color: var(--teams-text-tertiary);
+            }
+            
+            // Indicateurs de lecture pour messages envoyés
+            .read-indicators {
+              display: flex;
+              align-items: center;
+              
+              .read-status {
+                display: flex;
+                align-items: center;
+                gap: 2px;
+                
+                &.delivered {
+                  .delivered-icon {
+                    font-size: 14px;
+                    width: 14px;
+                    height: 14px;
+                    color: var(--teams-text-tertiary);
+                  }
+                }
+                
+                &.read {
+                  .read-icon {
+                    font-size: 14px;
+                    width: 14px;
+                    height: 14px;
+                    color: var(--teams-primary);
+                  }
+                  
+                  .read-count {
+                    font-size: 10px;
+                    color: var(--teams-primary);
+                    font-weight: 500;
+                  }
+                }
+              }
+            }
+            
+            // Indicateur pour messages reçus lus
+            .read-by-me-icon {
+              font-size: 12px;
+              width: 12px;
+              height: 12px;
+              color: var(--teams-primary);
+              opacity: 0.7;
+            }
+          }
+        }
+      }
+    }
+
+    .no-messages {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--teams-text-secondary);
+
+      mat-icon {
+        font-size: 64px;
+        height: 64px;
+        width: 64px;
+        margin-bottom: 24px;
+        opacity: 0.3;
+        color: var(--teams-text-tertiary);
+      }
+
+      p {
+        margin: 8px 0;
+        text-align: center;
+        color: var(--teams-text-secondary);
+
+        &.suggestion {
+          font-size: 14px;
+          color: var(--teams-text-tertiary);
+        }
+      }
+    }
+
+    .message-input-container {
+      padding: var(--teams-spacing-lg) var(--teams-spacing-xl);
+      background: var(--teams-bg-secondary);
+      border-top: 1px solid var(--teams-border-default);
+
+      .input-wrapper {
+        display: flex;
+        align-items: flex-end;
+        gap: var(--teams-spacing-md);
+
+        .message-input {
+          flex: 1;
+
+          .mat-mdc-form-field-wrapper {
+            padding-bottom: 0;
+          }
+
+          &.mat-form-field-appearance-outline {
+            .mat-mdc-form-field-flex {
+              background: var(--teams-surface-primary);
+              border-radius: var(--teams-radius-md);
+            }
+
+            .mat-mdc-form-field-outline {
+              border-color: var(--teams-border-default);
+              border-radius: var(--teams-radius-md);
+            }
+
+            &:hover:not(.mat-focused) .mat-mdc-form-field-outline {
+              border-color: var(--teams-border-hover);
+            }
+
+            &.mat-focused .mat-mdc-form-field-outline-thick {
+              border-color: var(--teams-primary);
+            }
+          }
+
+          .mat-mdc-form-field-label {
+            color: var(--teams-text-secondary) !important;
+
+            &.mat-focused {
+              color: var(--teams-primary) !important;
+            }
+          }
+
+          .mat-mdc-input-element {
+            padding: var(--teams-spacing-md);
+            font-size: var(--teams-font-size-base);
+            line-height: 1.4;
+            color: var(--teams-text-primary) !important;
+            background: transparent !important;
+            max-height: 120px;
+            overflow-y: auto;
+            resize: none;
+
+            &::placeholder {
+              color: var(--teams-text-placeholder) !important;
+              opacity: 1;
+            }
+          }
+        }
+
+        .send-button {
+          @include teams-button-primary;
+          height: 56px;
+          padding: 0 var(--teams-spacing-lg);
+          border-radius: var(--teams-radius-md);
+          font-weight: var(--teams-font-weight-semibold);
+          display: flex;
+          align-items: center;
+          gap: var(--teams-spacing-sm);
+          transition: all var(--teams-transition-fast);
+          min-width: 120px;
+
+          &:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: var(--teams-shadow-md);
+          }
+
+          &:active:not(:disabled) {
+            transform: translateY(0);
+          }
+
+          &:disabled {
+            background: var(--teams-text-disabled);
+            border-color: var(--teams-text-disabled);
+            color: var(--teams-bg-tertiary);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+          }
+
+          mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+          }
+
+          span {
+            font-size: var(--teams-font-size-base);
+          }
+        }
+      }
+    }
+
+    .no-conversation-selected {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      background: var(--teams-bg-primary);
+
+      mat-icon {
+        font-size: 96px;
+        height: 96px;
+        width: 96px;
+        margin-bottom: 32px;
+        opacity: 0.2;
+        color: var(--teams-text-tertiary);
+      }
+
+      h3 {
+        margin: 0 0 16px 0;
+        font-weight: 400;
+        color: var(--teams-text-secondary);
+      }
+
+      p {
+        margin: 0;
+        text-align: center;
+        color: var(--teams-text-tertiary);
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .chat-content .conversations-sidebar {
+    width: 280px;
+  }
+
+  .chat-main {
+    .messages-container .message .message-bubble {
+      max-width: 85%;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-content .conversations-sidebar {
+    width: 100%;
+    position: fixed;
+    z-index: 5;
+  }
+
+  .chat-main {
+    .messages-container .message .message-bubble {
+      max-width: 90%;
+    }
+    
+    .message-input-container {
+      padding: var(--teams-spacing-md) var(--teams-spacing-lg);
+
+      .input-wrapper {
+        flex-direction: column;
+        gap: var(--teams-spacing-sm);
+        align-items: stretch;
+
+        .send-button {
+          height: 48px;
+          min-width: 100%;
+          justify-content: center;
+        }
+      }
+    }
+  }
+}
+
+// ================================================
+// RECHERCHE D'UTILISATEURS - TEAMS STYLE
+// ================================================
+
+.user-search-container {
+  padding: var(--teams-spacing-md);
+  background: var(--teams-surface-secondary);
+  border-bottom: 1px solid var(--teams-border-default);
+  
+  .search-field {
+    width: 100%;
+    margin-bottom: var(--teams-spacing-md);
+    
+    .mat-mdc-form-field-outline {
+      border-radius: var(--teams-radius-md);
+    }
+  }
+  
+  .search-results {
+    max-height: 300px;
+    overflow-y: auto;
+    @include teams-scrollbar;
+    
+    .user-result {
+      display: flex;
+      align-items: center;
+      padding: var(--teams-spacing-sm) var(--teams-spacing-md);
+      cursor: pointer;
+      border-radius: var(--teams-radius-sm);
+      transition: all var(--teams-transition-fast);
+      margin-bottom: var(--teams-spacing-xs);
+      background: var(--teams-surface-primary);
+      border: 1px solid var(--teams-border-default);
+      
+      &:hover {
+        background: var(--teams-surface-hover);
+        border-color: var(--teams-border-hover);
+        transform: translateY(-1px);
+        box-shadow: var(--teams-shadow-sm);
+      }
+      
+      &:active {
+        transform: translateY(0);
+        box-shadow: none;
+      }
+      
+      .user-avatar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--teams-primary-light);
+        margin-right: var(--teams-spacing-md);
+        flex-shrink: 0;
+        
+        mat-icon {
+          color: var(--teams-primary);
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
+      }
+      
+      .user-info {
+        flex: 1;
+        min-width: 0;
+        
+        .user-name {
+          font-weight: var(--teams-font-weight-medium);
+          font-size: var(--teams-font-size-base);
+          color: var(--teams-text-primary);
+          margin-bottom: 2px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        
+        .user-email {
+          font-size: var(--teams-font-size-sm);
+          color: var(--teams-text-secondary);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+    }
+  }
+  
+  .no-results, .search-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--teams-spacing-xl);
+    text-align: center;
+    color: var(--teams-text-secondary);
+    background: var(--teams-surface-primary);
+    border-radius: var(--teams-radius-md);
+    border: 1px dashed var(--teams-border-default);
+    
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      margin-bottom: var(--teams-spacing-sm);
+      opacity: 0.6;
+      
+      &.spinning {
+        animation: spin 1s linear infinite;
+      }
+    }
+    
+    span {
+      font-size: var(--teams-font-size-sm);
+      font-weight: var(--teams-font-weight-medium);
+    }
+  }
+}
+
+// Animation de rotation pour le spinner
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// ================================================
+// INDICATEURS DE CHARGEMENT ET HISTORIQUE
+// ================================================
+
+.loading-indicator, .no-more-messages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--teams-spacing-lg);
+  text-align: center;
+  color: var(--teams-text-secondary);
+  background: var(--teams-surface-tertiary);
+  border-radius: var(--teams-radius-md);
+  margin-bottom: var(--teams-spacing-md);
+  
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    margin-bottom: var(--teams-spacing-sm);
+    color: var(--teams-text-tertiary);
+    
+    &.spinning {
+      animation: spin 1s linear infinite;
+    }
+  }
+  
+  span {
+    font-size: var(--teams-font-size-sm);
+    font-weight: var(--teams-font-weight-medium);
+  }
+}
+
+.no-more-messages {
+  background: var(--teams-surface-secondary);
+  border: 1px dashed var(--teams-border-default);
+  
+  mat-icon {
+    opacity: 0.7;
+  }
+  
+  span {
+    font-style: italic;
+    opacity: 0.8;
+  }
+}
+
+// Overrides pour le sidebar header avec Teams style
+.conversations-sidebar {
+  background: var(--teams-bg-secondary, #f8f8f8);
+  border-right: 1px solid var(--teams-border-default, #e1e1e1);
+  
+  .sidebar-header {
+    background: var(--teams-bg-tertiary, #f3f2f1);
+    border-bottom: 1px solid var(--teams-border-default, #e1e1e1);
+    flex-shrink: 0;
+    
+    h3 {
+      color: var(--teams-text-primary, #242424);
+      font-weight: var(--teams-font-weight-semibold, 600);
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    
+    button[mat-icon-button] {
+      background: var(--teams-surface-primary, white);
+      border: 1px solid var(--teams-border-default, #e1e1e1);
+      border-radius: 50%;
+      transition: all var(--teams-transition-fast, 0.2s);
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 40px !important;
+      height: 40px !important;
+      
+      mat-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        font-size: 20px;
+      }
+      
+      &:hover {
+        background: var(--teams-primary, #6264a7);
+        border-color: var(--teams-primary, #6264a7);
+        transform: scale(1.05);
+        
+        mat-icon {
+          color: white;
+        }
+      }
+      
+      mat-icon {
+        color: var(--teams-text-secondary, #616161);
+        transition: color var(--teams-transition-fast, 0.2s);
+      }
+    }
+  }
+  
+  // Forcer les couleurs de texte pour éviter les problèmes de contraste
+  * {
+    color: var(--teams-text-primary, #242424) !important;
+  }
+  
+  .conversation-name {
+    color: var(--teams-text-primary, #242424) !important;
+    font-weight: 600 !important;
+  }
+  
+  .last-message {
+    color: var(--teams-text-secondary, #616161) !important;
+    
+    .sender {
+      color: var(--teams-text-secondary, #616161) !important;
+    }
+    
+    .content {
+      color: var(--teams-text-secondary, #616161) !important;
+    }
+  }
+  
+  .last-activity {
+    color: var(--teams-text-tertiary, #8a8886) !important;
+  }
+  
+  .pending-message {
+    color: var(--teams-warning, #ff8c00) !important;
+  }
+}
+
+// ================================================
+// INDICATEUR DE FRAPPE (US010)
+// ================================================
+
+.typing-indicator {
+  padding: 8px 16px;
+  background: var(--teams-bg-secondary, #f8f9fa);
+  border-top: 1px solid var(--teams-border-light, #f3f2f1);
+  
+  .typing-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--teams-text-secondary, #6c757d);
+    font-size: 14px;
+    
+    .typing-animation {
+      display: flex;
+      gap: 4px;
+      
+      .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: var(--teams-text-secondary, #6c757d);
+        animation: typing-bounce 1.4s infinite ease-in-out;
+        
+        &:nth-child(1) {
+          animation-delay: -0.32s;
+        }
+        
+        &:nth-child(2) {
+          animation-delay: -0.16s;
+        }
+        
+        &:nth-child(3) {
+          animation-delay: 0s;
+        }
+      }
+    }
+    
+    .typing-text {
+      font-style: italic;
+    }
+  }
+}
+
+@keyframes typing-bounce {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

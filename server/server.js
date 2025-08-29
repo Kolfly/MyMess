@@ -22,6 +22,9 @@ const socketIo = require('socket.io');
 const sequelize = require('./database/config/database');           // Configuration base de données
 const { notFoundHandler, errorHandler } = require('./middleware/errorMiddleware');  // Gestion des erreurs
 
+// Charger les associations entre les modèles
+require('./models/associations');
+
 // ================================================
 // CRÉATION DE L'APPLICATION ET DU SERVEUR
 // ================================================
@@ -126,37 +129,19 @@ const io = socketIo(server, {
 console.log('✅ Socket.io configuré et prêt');
 
 // ================================================
-// GESTIONNAIRE SOCKET.IO BASIQUE
+// GESTIONNAIRE SOCKET.IO COMPLET
 // ================================================
 
-// Gestion des connexions WebSocket - ceci sera étendu plus tard
-io.on('connection', (socket) => {
-  console.log(`👤 Nouvelle connexion WebSocket: ${socket.id}`);
+const SocketHandler = require('./sockets/socketHandler');
 
-  // Message de bienvenue au client qui se connecte
-  socket.emit('welcome', {
-    message: 'Connexion WebSocket établie avec succès',
-    socketId: socket.id,
-    timestamp: new Date().toISOString(),
-    server: 'Chat Application v1.0'
-  });
+// Initialiser le gestionnaire WebSocket complet
+const socketHandler = new SocketHandler(io);
 
-  // Test d'écho - permet de vérifier la communication bidirectionnelle
-  socket.on('ping', (data) => {
-    socket.emit('pong', {
-      originalMessage: data,
-      response: 'Pong reçu du serveur',
-      timestamp: new Date().toISOString()
-    });
-  });
+// Rendre accessible globalement pour les autres services
+global.io = io;
+global.socketHandler = socketHandler;
 
-  // Gestion de la déconnexion
-  socket.on('disconnect', (reason) => {
-    console.log(`👋 Déconnexion WebSocket: ${socket.id} - Raison: ${reason}`);
-  });
-});
-
-console.log('✅ Gestionnaire Socket.io configuré');
+console.log('✅ Gestionnaire Socket.io complet configuré');
 
 // ================================================
 // ROUTES DE TEST ET DE DIAGNOSTIC
@@ -229,25 +214,139 @@ app.get('/info', (req, res) => {
 console.log('✅ Routes de test configurées');
 
 // ================================================
-// PLACEHOLDERS POUR LES FUTURES ROUTES D'API
+// ROUTES D'API PRINCIPALES
 // ================================================
-/*
-// Ces routes seront implémentées dans les prochaines étapes
-app.all('/api/*', (req, res) => {
-  res.status(501).json({
-    success: false,
-    message: 'API en cours de développement',
-    route: req.originalUrl,
-    method: req.method,
-    note: 'Cette route sera implémentée dans les prochaines versions',
-    plannedFeatures: [
-      '/api/auth/* - Authentification et gestion des comptes',
-      '/api/users/* - Gestion des profils utilisateur',
-      '/api/messages/* - Envoi et réception de messages',
-      '/api/conversations/* - Gestion des conversations'
-    ]
+
+// Import des routes - VERSION CLEAN
+const authRoutes = require('./routes/authRoutes-clean');
+const userRoutes = require('./routes/userRoutes-simple');
+const messageRoutes = require('./routes/messageRoutes-simple');
+
+// Configuration des routes principales - RÉACTIVATION PROGRESSIVE
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/messages', messageRoutes);
+
+// Route de test temporaire - RÉACTIVÉE POUR TEST
+app.get('/api/test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Serveur fonctionnel - test sans autres routes'
   });
-});*/
+});
+
+// 📋 LISTE DE TOUTES LES ROUTES DISPONIBLES
+app.get('/api/routes', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Liste de toutes les routes disponibles',
+    routes: {
+      auth: {
+        base_url: '/api/auth',
+        routes: [
+          'POST   /register                - Inscription utilisateur',
+          'POST   /login                   - Connexion utilisateur', 
+          'POST   /refresh                 - Renouveler le token',
+          'POST   /resend-verification     - Renvoyer email de vérification',
+          'GET    /me                      - Mon profil (auth requise)',
+          'PUT    /profile                 - Modifier mon profil (auth requise)',
+          'PUT    /change-password         - Changer mot de passe (auth requise)',
+          'PUT    /status                  - Changer mon statut (auth requise)',
+          'POST   /logout                  - Déconnexion (auth requise)',
+          'GET    /stats                   - Mes statistiques (auth requise)',
+          'GET    /search?q=terme          - Rechercher utilisateurs (auth requise)',
+          'GET    /global-stats            - Statistiques globales',
+          'GET    /test                    - Test authentification (auth requise)'
+        ]
+      },
+      users: {
+        base_url: '/api/users',
+        routes: [
+          'GET    /test                    - Test routes utilisateur (auth requise)',
+          'GET    /stats                   - Statistiques publiques',
+          'GET    /search?q=terme          - Rechercher utilisateurs (auth requise)',
+          'GET    /me/stats                - Mes stats détaillées (auth requise)',
+          'GET    /online                  - Utilisateurs en ligne',
+          'GET    /statistics              - Statistiques détaillées (auth requise)',
+          'GET    /:userId                 - Profil utilisateur par ID (auth requise)',
+          'PUT    /profile                 - Modifier profil (auth requise)',
+          'PUT    /status                  - Modifier statut (auth requise)',
+          'GET    /public/:userId          - Profil public utilisateur',
+          'GET    /check/username/:username - Vérifier disponibilité username',
+          'GET    /check/email/:email      - Vérifier disponibilité email',
+          'PUT    /last-seen               - Mettre à jour dernière connexion (auth requise)'
+        ]
+      },
+      messages: {
+        base_url: '/api/messages',
+        routes: [
+          'GET    /test                           - Test routes messages (auth requise)',
+          'POST   /                              - Envoyer message (auth requise)',
+          'PUT    /:messageId                    - Modifier message (auth requise)',
+          'DELETE /:messageId                    - Supprimer message (auth requise)',
+          'GET    /conversations                 - Mes conversations (auth requise)',
+          'POST   /conversations/private         - Créer conversation privée (auth requise)',
+          'POST   /conversations/group           - Créer groupe (auth requise)',
+          'GET    /conversations/:id             - Détails conversation (auth requise)',
+          'GET    /conversations/:id/messages    - Messages conversation (auth requise)',
+          'POST   /conversations/:id/read        - Marquer comme lu (auth requise)',
+          'GET    /stats                         - Statistiques messages (auth requise)'
+        ]
+      },
+      websocket: {
+        base_url: 'ws://localhost:3000',
+        description: 'WebSocket temps réel pour chat instantané',
+        authentication: 'Token JWT dans auth.token ou headers.authorization',
+        events: {
+          client_to_server: [
+            'message:send          - Envoyer un message',
+            'message:edit          - Modifier un message', 
+            'message:delete        - Supprimer un message',
+            'conversation:join     - Rejoindre une conversation',
+            'conversation:leave    - Quitter une conversation',
+            'conversation:typing   - Indiquer que l\'utilisateur tape',
+            'conversation:read     - Marquer des messages comme lus',
+            'user:status           - Changer son statut (online/away/busy)'
+          ],
+          server_to_client: [
+            'welcome               - Message de bienvenue à la connexion',
+            'message:new           - Nouveau message reçu',
+            'message:edited        - Message modifié',
+            'message:deleted       - Message supprimé', 
+            'message:sent          - Confirmation d\'envoi',
+            'message:read          - Message marqué comme lu',
+            'user:joined           - Utilisateur rejoint conversation',
+            'user:left             - Utilisateur quitte conversation',
+            'user:typing           - Utilisateur en train de taper',
+            'user:status_changed   - Statut utilisateur changé',
+            'error                 - Erreur WebSocket'
+          ]
+        }
+      },
+      system: {
+        base_url: '/',
+        routes: [
+          'GET    /                        - Informations serveur',
+          'GET    /health                  - État de santé du serveur',
+          'GET    /info                    - Informations détaillées API',
+          'GET    /api/test                - Test général API',
+          'GET    /api/routes              - Cette liste de routes'
+        ]
+      }
+    },
+    notes: [
+      '(auth requise) = Header: Authorization: Bearer YOUR_JWT_TOKEN',
+      'Pour les requêtes POST/PUT, envoyer les données en JSON dans le body',
+      'Base URL complète: http://localhost:3000'
+    ],
+    timestamp: new Date().toISOString()
+  });
+});
+
+console.log('✅ Routes API configurées');
+console.log('   📝 /api/auth/* - Authentification et gestion des comptes');
+console.log('   👥 /api/users/* - Gestion des profils utilisateur');
+console.log('   💬 /api/messages/* - Envoi et réception de messages');
 
 // ================================================
 // MIDDLEWARE DE LOGGING DES REQUÊTES
@@ -336,6 +435,43 @@ const PORT = process.env.PORT || 3000;
 async function startServer() {
   try {
     console.log('\n🔄 Finalisation du démarrage...');
+    
+    // ================================================
+    // SYNCHRONISATION DE LA BASE DE DONNÉES
+    // ================================================
+    
+    console.log('🔄 Synchronisation de la base de données...');
+    
+    try {
+      // Mode sûr maintenant que les tables existent
+      await sequelize.sync({ 
+        alter: true,     // ✅ Mode sûr: Ajuste les tables existantes
+        logging: false   // Désactiver le logging pour éviter les erreurs
+      });
+      
+      console.log('✅ Tables synchronisées avec succès:');
+      console.log('   📋 users - Utilisateurs du système');
+      console.log('   💬 conversations - Chats privés et groupes');
+      console.log('   📨 messages - Messages des conversations');
+      console.log('   👥 conversation_members - Membres des conversations');
+      
+    } catch (error) {
+      console.log('⚠️  Erreur de synchronisation, utilisation du script manuel...');
+      
+      // Fallback sur l'initialisation manuelle si sync échoue
+      const { initializeDatabase, safeInitializeDatabase } = require('./database/init-database');
+      
+      // Utiliser la version sécurisée par défaut
+      if (process.env.FORCE_DB_RESET === 'true') {
+        console.log('⚠️  FORCE_DB_RESET détecté - Réinitialisation complète');
+        await initializeDatabase(true);
+        console.log('✅ Base de données réinitialisée complètement');
+      } else {
+        console.log('🔒 Mode sécurisé - Préservation des données');
+        await safeInitializeDatabase();
+        console.log('✅ Base de données initialisée en mode sécurisé');
+      }
+    }
     
     // Démarrer l'écoute sur le port configuré
     server.listen(PORT, () => {

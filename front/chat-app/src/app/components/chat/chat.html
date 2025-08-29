@@ -1,0 +1,370 @@
+<div class="chat-container">
+  <!-- Toolbar -->
+  <mat-toolbar color="primary" class="chat-toolbar">
+    <span>MyMess Chat</span>
+    <span class="connection-status" [class.connected]="isConnected()" [class.disconnected]="!isConnected()">
+      <mat-icon>{{ isConnected() ? 'wifi' : 'wifi_off' }}</mat-icon>
+      <span class="status-text">{{ isConnected() ? 'En ligne' : 'Hors ligne' }}</span>
+    </span>
+    <span class="spacer"></span>
+    @if (currentUser(); as user) {
+      <span class="user-info">{{ user.displayName || user.username }}</span>
+      <button mat-icon-button [matMenuTriggerFor]="userMenu">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+    }
+    
+    <mat-menu #userMenu="matMenu">
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Déconnexion</span>
+      </button>
+    </mat-menu>
+  </mat-toolbar>
+
+  <!-- Main Layout -->
+  <mat-sidenav-container class="chat-content">
+    <!-- Sidebar - Liste des conversations -->
+    <mat-sidenav 
+      mode="side" 
+      opened="true" 
+      class="conversations-sidebar">
+      
+      <div class="sidebar-header">
+        <h3>Conversations</h3>
+        <div class="header-actions">
+          <button 
+            mat-icon-button
+            (click)="showPendingConversations = true"
+            matTooltip="Voir les demandes en attente">
+            <mat-icon matBadge="{{ pendingConversationsCount() }}" 
+                      [matBadgeHidden]="pendingConversationsCount() === 0"
+                      matBadgeColor="warn">notifications</mat-icon>
+          </button>
+          <button 
+            mat-icon-button 
+            (click)="toggleUserSearch()"
+            [matTooltip]="showUserSearch() ? 'Fermer la recherche' : 'Démarrer une nouvelle conversation'">
+            <mat-icon>{{ showUserSearch() ? 'close' : 'add' }}</mat-icon>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Zone de recherche d'utilisateurs -->
+      @if (showUserSearch()) {
+        <div class="user-search-container">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Rechercher un utilisateur</mat-label>
+            <input 
+              matInput 
+              [(ngModel)]="searchQuery"
+              (input)="onSearchUsers($event)"
+              placeholder="Nom ou email..."
+              autocomplete="off">
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+          
+          @if (searchResults().length > 0) {
+            <div class="search-results">
+              @for (user of searchResults(); track user.id) {
+                <div 
+                  class="user-result" 
+                  (click)="startConversationWithUser(user)">
+                  <div class="user-avatar">
+                    <mat-icon>person</mat-icon>
+                  </div>
+                  <div class="user-info">
+                    <div class="user-name">{{ user.displayName || user.username }}</div>
+                    <div class="user-email">{{ user.email }}</div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+          
+          @if (searchQuery && searchResults().length === 0 && !isSearching()) {
+            <div class="no-results">
+              <mat-icon>person_search</mat-icon>
+              <span>Aucun utilisateur trouvé</span>
+            </div>
+          }
+          
+          @if (isSearching()) {
+            <div class="search-loading">
+              <mat-icon class="spinning">refresh</mat-icon>
+              <span>Recherche en cours...</span>
+            </div>
+          }
+        </div>
+        
+        <mat-divider></mat-divider>
+      }
+      
+      <mat-divider></mat-divider>
+      
+      <mat-nav-list class="conversations-list">
+        @for (conversation of conversations(); track conversation.id) {
+          <mat-list-item 
+            (click)="selectConversation(conversation)"
+            [class.selected]="selectedConversation()?.id === conversation.id"
+            [class.pending-conversation]="conversation.status === 'pending'">
+            
+            <div class="conversation-item">
+              <div class="conversation-avatar">
+                <div class="avatar-initials" [class.group-avatar]="conversation.type === 'group'">
+                  {{ getUserInitials(conversation) }}
+                </div>
+                @if (conversation.status === 'pending') {
+                  <mat-icon class="status-indicator pending">schedule</mat-icon>
+                }
+              </div>
+              
+              <div class="conversation-content">
+                <div class="conversation-header">
+                  <span class="conversation-name">
+                    {{ getConversationDisplayName(conversation) }}
+                  </span>
+                  @if (conversation.status === 'pending') {
+                    <mat-icon class="pending-badge" matTooltip="En attente d'acceptation">schedule</mat-icon>
+                  }
+                  @if (conversation.unreadCount && conversation.unreadCount > 0) {
+                    <mat-icon matBadge="{{ conversation.unreadCount }}" matBadgeColor="accent" class="unread-badge">
+                      notifications
+                    </mat-icon>
+                  }
+                </div>
+                
+                @if (conversation.lastMessage) {
+                  <div class="last-message">
+                    <span class="sender">{{ conversation.lastMessage.sender.displayName }}:</span>
+                    <span class="content">{{ conversation.lastMessage.content }}</span>
+                  </div>
+                  <div class="last-activity">
+                    {{ formatMessageTime(conversation.lastMessage.createdAt) }}
+                  </div>
+                } @else if (conversation.status === 'pending') {
+                  <div class="pending-message">
+                    <span>Demande de conversation en attente</span>
+                  </div>
+                }
+              </div>
+            </div>
+          </mat-list-item>
+          <mat-divider></mat-divider>
+        }
+        
+        @empty {
+          <div class="no-conversations">
+            <mat-icon>chat_bubble_outline</mat-icon>
+            <p>Aucune conversation</p>
+          </div>
+        }
+      </mat-nav-list>
+      
+      <!-- Modal des demandes en attente -->
+      @if (showPendingConversations) {
+        <div class="pending-modal-overlay" (click)="closePendingModal()">
+          <div class="pending-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h3>Demandes de conversation</h3>
+              <button mat-icon-button (click)="closePendingModal()">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+            
+            <div class="modal-content">
+              @if (pendingConversations().length > 0) {
+                @for (conversation of pendingConversations(); track conversation.id) {
+                  <div class="pending-conversation-item">
+                    <div class="conversation-info">
+                      <mat-icon>{{ conversation.type === 'group' ? 'group' : 'person' }}</mat-icon>
+                      <div class="info-text">
+                        <div class="name">{{ getConversationDisplayName(conversation) }}</div>
+                        <div class="request-info">Souhaite démarrer une conversation</div>
+                      </div>
+                    </div>
+                    
+                    <div class="conversation-actions">
+                      <button 
+                        mat-raised-button 
+                        color="warn"
+                        (click)="rejectConversation(conversation.id)"
+                        [disabled]="processingConversation() === conversation.id">
+                        <mat-icon>close</mat-icon>
+                        Refuser
+                      </button>
+                      <button 
+                        mat-raised-button 
+                        color="primary"
+                        (click)="acceptConversation(conversation.id)"
+                        [disabled]="processingConversation() === conversation.id">
+                        <mat-icon>check</mat-icon>
+                        Accepter
+                      </button>
+                    </div>
+                  </div>
+                  <mat-divider></mat-divider>
+                }
+              } @else {
+                <div class="no-pending">
+                  <mat-icon>check_circle</mat-icon>
+                  <p>Aucune demande en attente</p>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </mat-sidenav>
+
+    <!-- Main Content - Zone de chat -->
+    <mat-sidenav-content class="chat-main">
+      @if (selectedConversation(); as conversation) {
+        <!-- Header de la conversation -->
+        <div class="chat-header">
+          <div class="conversation-info">
+            <mat-icon class="conversation-icon">
+              {{ conversation.type === 'group' ? 'group' : 'person' }}
+            </mat-icon>
+            <div class="conversation-details">
+              <h4>{{ getConversationDisplayName(conversation) }}</h4>
+              @if (conversation.type === 'group' && conversation.description) {
+                <p class="conversation-description">{{ conversation.description }}</p>
+              }
+            </div>
+          </div>
+          
+          <div class="chat-actions">
+            <button mat-icon-button>
+              <mat-icon>more_vert</mat-icon>
+            </button>
+          </div>
+        </div>
+        
+        <mat-divider></mat-divider>
+
+        <!-- Zone des messages -->
+        <div class="messages-container" #messagesContainer (scroll)="onMessagesScroll($event)">
+          <!-- Indicateur de chargement en haut -->
+          @if (isLoadingMessages() && messages().length > 0) {
+            <div class="loading-indicator">
+              <mat-icon class="spinning">refresh</mat-icon>
+              <span>Chargement de l'historique...</span>
+            </div>
+          }
+          
+          <!-- Message indiquant qu'il n'y a plus d'historique -->
+          @if (!hasMoreMessages() && messages().length > 0) {
+            <div class="no-more-messages">
+              <mat-icon>history</mat-icon>
+              <span>Début de la conversation</span>
+            </div>
+          }
+          
+          @for (message of messages(); track message.id) {
+            <div class="message" [class.own-message]="isCurrentUserMessage(message)">
+              <div class="message-bubble">
+                @if (!isCurrentUserMessage(message)) {
+                  <div class="sender-name">{{ message.sender.displayName }}</div>
+                }
+                <div class="message-content">{{ message.content }}</div>
+                <div class="message-footer">
+                  <div class="message-time">{{ formatMessageTime(message.createdAt) }}</div>
+                  @if (message.isEdited) {
+                    <span class="edited-indicator">(modifié)</span>
+                  }
+                  @if (isCurrentUserMessage(message)) {
+                    <div class="read-indicators">
+                      @if (message.readByCount && message.readByCount > 0) {
+                        <div class="read-status read" 
+                             [matTooltip]="getReadTooltip(message)"
+                             matTooltipPosition="above">
+                          <mat-icon class="read-icon">done_all</mat-icon>
+                          @if (message.readByCount > 1) {
+                            <span class="read-count">{{ message.readByCount }}</span>
+                          }
+                        </div>
+                      } @else {
+                        <div class="read-status delivered">
+                          <mat-icon class="delivered-icon">done</mat-icon>
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    <!-- Message reçu - indicateur si lu par l'utilisateur actuel -->
+                    @if (message.isReadByCurrentUser) {
+                      <mat-icon class="read-by-me-icon" matTooltip="Lu">visibility</mat-icon>
+                    }
+                  }
+                </div>
+              </div>
+            </div>
+          }
+          
+          @empty {
+            <div class="no-messages">
+              <mat-icon>chat_bubble_outline</mat-icon>
+              <p>Aucun message dans cette conversation</p>
+              <p class="suggestion">Commencez la conversation !</p>
+            </div>
+          }
+        </div>
+
+        <!-- Indicateur de frappe (US010) -->
+        @if (typingUsers().length > 0) {
+          <div class="typing-indicator">
+            <div class="typing-content">
+              <div class="typing-animation">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
+              <span class="typing-text">
+                @if (typingUsers().length === 1) {
+                  {{ typingUsers()[0] }} tape...
+                } @else if (typingUsers().length === 2) {
+                  {{ typingUsers()[0] }} et {{ typingUsers()[1] }} tapent...
+                } @else {
+                  {{ typingUsers().length }} personnes tapent...
+                }
+              </span>
+            </div>
+          </div>
+        }
+
+        <!-- Zone de saisie -->
+        <div class="message-input-container">
+          <div class="input-wrapper">
+            <mat-form-field appearance="outline" class="message-input">
+              <mat-label>Tapez votre message...</mat-label>
+              <input 
+                matInput 
+                [(ngModel)]="newMessage"
+                (keydown)="onEnterKey($event)"
+                (input)="onMessageInput()"
+                placeholder="Écrivez votre message..."
+                autocomplete="off">
+            </mat-form-field>
+            
+            <button 
+              mat-raised-button 
+              color="primary"
+              class="send-button"
+              (click)="sendMessage()"
+              [disabled]="!newMessage || newMessage.trim().length === 0">
+              <mat-icon>send</mat-icon>
+              <span>Envoyer</span>
+            </button>
+          </div>
+        </div>
+      } @else {
+        <!-- Aucune conversation sélectionnée -->
+        <div class="no-conversation-selected">
+          <mat-icon>chat</mat-icon>
+          <h3>Sélectionnez une conversation</h3>
+          <p>Choisissez une conversation dans la liste pour commencer à discuter</p>
+        </div>
+      }
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>

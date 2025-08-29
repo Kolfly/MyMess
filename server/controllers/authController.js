@@ -30,7 +30,7 @@ class AuthController {
       // Étape 2: Déléguer la création à notre service
       // Le controller ne connaît pas les détails de comment créer un utilisateur,
       // il fait juste confiance au service pour faire le travail correctement
-      const result = await authService.createUser(req.body);
+      const result = await authService.createUserAccount(req.body);
 
       // Étape 3: Formater une réponse de succès standardisée
       // Une structure cohérente aide les clients (Angular, mobile, etc.) à traiter les réponses
@@ -39,10 +39,11 @@ class AuthController {
         message: result.message,
         data: {
           user: result.user,
-          token: result.token,
+          accessToken: result.tokens.accessToken,
+          refreshToken: result.tokens.refreshToken,
           // Infos utiles pour le client
           tokenType: 'Bearer',
-          expiresIn: process.env.JWT_EXPIRE || '7d'
+          emailVerificationRequired: !result.user.emailVerified
         },
         // Timestamp pour que le client sache quand cette réponse a été générée
         timestamp: new Date().toISOString()
@@ -102,37 +103,26 @@ class AuthController {
 
       const { email, password } = req.body;
 
-      // Déléguer l'authentification au service
-      const result = await authService.authenticateUser(email, password);
-
-      // Générer une paire complète de tokens (access + refresh)
-      const tokenPair = generateTokenPair(result.user.id);
-
-      // Enregistrer des infos de connexion utiles (pour les stats, la sécurité, etc.)
-      const loginInfo = {
-        loginTime: new Date().toISOString(),
-        userAgent: req.get('User-Agent'),  // Navigateur/app utilisé
-        ip: req.ip || req.connection.remoteAddress,  // Adresse IP
-        // On ne stocke pas ces infos dans la DB pour l'instant, mais on pourrait
+      // Métadonnées de connexion
+      const loginMetadata = {
+        ip: req.ip || req.connection.remoteAddress,
+        userAgent: req.get('User-Agent'),
+        timestamp: new Date()
       };
+
+      // Déléguer l'authentification au service
+      const result = await authService.authenticateUser(email, password, loginMetadata);
 
       res.status(200).json({
         success: true,
         message: 'Connexion réussie',
         data: {
           user: result.user,
-          tokens: {
-            accessToken: tokenPair.accessToken,
-            refreshToken: tokenPair.refreshToken,
-            tokenType: tokenPair.tokenType,
-            expiresIn: tokenPair.expiresIn,
-            refreshExpiresIn: tokenPair.refreshExpiresIn
-          }
+          accessToken: result.tokens.accessToken,
+          refreshToken: result.tokens.refreshToken,
+          tokenType: 'Bearer'
         },
-        meta: {
-          loginInfo,
-          timestamp: new Date().toISOString()
-        }
+        timestamp: new Date().toISOString()
       });
 
     } catch (error) {
@@ -172,7 +162,7 @@ class AuthController {
   async logout(req, res) {
     try {
       // req.user est disponible grâce à notre middleware d'authentification
-      await authService.logoutUser(req.user.id);
+      const result = await authService.logoutUser(req.user.id);
 
       // En production, on pourrait aussi ajouter le token à une "blacklist"
       // pour s'assurer qu'il ne peut plus être utilisé même avant expiration
@@ -200,12 +190,14 @@ class AuthController {
   // Route: GET /api/auth/me
   async getMe(req, res) {
     try {
-      // Le middleware d'authentification nous garantit que req.user existe
-      const result = await authService.getUserById(req.user.id);
-
+      // Le middleware d'authentification nous garantit que req.user existe et est à jour
+      // Utiliser toPublicJSON() pour filtrer les données sensibles
       res.status(200).json({
         success: true,
-        data: result,
+        message: 'Profil récupéré avec succès',
+        data: {
+          user: req.user.toPublicJSON()
+        },
         timestamp: new Date().toISOString()
       });
 
@@ -414,6 +406,106 @@ class AuthController {
     }
     
     return Math.min(100, score);
+  }
+
+  // ================================================
+  // NOUVELLES MÉTHODES POUR VÉRIFICATION EMAIL
+  // ================================================
+
+  // 📧 VÉRIFICATION D'EMAIL
+  async verifyEmail(req, res) {
+    try {
+      const { token } = req.params;
+
+      if (!token) {
+        return res.status(400).json({
+          success: false,
+          message: 'Token de vérification manquant'
+        });
+      }
+
+      const result = await authService.verifyUserEmail(token);
+
+      return res.status(200).json({
+        success: true,
+        message: result.message,
+        data: {
+          user: result.user
+        }
+      });
+
+    } catch (error) {
+      console.error('❌ Erreur vérification email:', error.message);
+      
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  // 📧 RENVOI D'EMAIL DE VÉRIFICATION
+  async resendVerification(req, res) {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email invalide',
+          errors: errors.array()
+        });
+      }
+
+      const { email } = req.body;
+      const result = await authService.resendVerificationEmail(email);
+
+      return res.status(200).json({
+        success: true,
+        message: result.message
+      });
+
+    } catch (error) {
+      // Toujours retourner un message générique pour ne pas révéler si l'email existe
+      return res.status(200).json({
+        success: true,
+        message: 'Si cette adresse existe et n\'est pas encore vérifiée, un email de vérification sera envoyé'
+      });
+    }
+  }
+
+  // 🔄 MISE À JOUR DE STATUT
+  async updateStatus(req, res) {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          message: 'Statut invalide',
+          errors: errors.array()
+        });
+      }
+
+      const userId = req.user.id;
+      const { status } = req.body;
+
+      const result = await authService.updateUserStatus(userId, status);
+
+      return res.status(200).json({
+        success: true,
+        message: result.message,
+        data: {
+          user: result.user
+        }
+      });
+
+    } catch (error) {
+      console.error('❌ Erreur changement statut:', error.message);
+      
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
   }
 }
 

@@ -1,0 +1,403 @@
+// ================================================
+// LOGIN COMPONENT - TEAMS DARK THEME
+// ================================================
+
+@import '../../../styles/teams-theme';
+
+.login-container {
+  min-height: 100vh;
+  background: var(--teams-bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--teams-spacing-xl);
+  position: relative;
+  overflow: hidden;
+
+  // Subtle background pattern Teams-style
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+      radial-gradient(circle at 20% 80%, rgba(79, 70, 229, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(79, 70, 229, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .login-card-wrapper {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .login-card {
+    @include teams-card;
+    border-radius: var(--teams-radius-lg);
+    box-shadow: var(--teams-shadow-xl);
+    overflow: hidden;
+    border: 1px solid var(--teams-border-light);
+    backdrop-filter: blur(10px);
+
+    // Header avec style Teams
+    mat-card-header {
+      background: linear-gradient(135deg, var(--teams-bg-secondary) 0%, var(--teams-bg-tertiary) 100%);
+      padding: var(--teams-spacing-xxl);
+      text-align: center;
+      border-bottom: 1px solid var(--teams-border-default);
+
+      .title-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--teams-spacing-md);
+        margin-bottom: var(--teams-spacing-sm);
+
+        .chat-icon {
+          font-size: 32px;
+          width: 32px;
+          height: 32px;
+          color: var(--teams-primary);
+          background: var(--teams-primary-light);
+          border-radius: 50%;
+          padding: var(--teams-spacing-sm);
+          transition: all var(--teams-transition-normal);
+          
+          &:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px var(--teams-primary-border);
+          }
+        }
+      }
+
+      mat-card-title {
+        color: var(--teams-text-primary) !important;
+        font-size: var(--teams-font-size-xl);
+        font-weight: var(--teams-font-weight-semibold);
+        margin: 0;
+        letter-spacing: -0.5px;
+      }
+
+      mat-card-subtitle {
+        color: var(--teams-text-secondary) !important;
+        font-size: var(--teams-font-size-sm);
+        margin: var(--teams-spacing-sm) 0 0 0;
+        font-weight: var(--teams-font-weight-normal);
+        opacity: 0.9;
+      }
+    }
+
+    mat-card-content {
+      padding: var(--teams-spacing-xxl);
+      background: var(--teams-surface-primary);
+
+      .login-form {
+        display: flex;
+        flex-direction: column;
+        gap: var(--teams-spacing-xl);
+
+        .full-width {
+          width: 100%;
+        }
+
+        // Form fields avec style Teams
+        mat-form-field {
+          &.mat-form-field-appearance-outline {
+            .mat-mdc-form-field-outline {
+              border-radius: var(--teams-radius-sm);
+              border-color: var(--teams-border-default);
+              transition: all var(--teams-transition-fast);
+            }
+
+            &:hover:not(.mat-focused) {
+              .mat-mdc-form-field-outline {
+                border-color: var(--teams-border-hover);
+                background: rgba(255, 255, 255, 0.02);
+              }
+            }
+
+            &.mat-focused {
+              .mat-mdc-form-field-outline-thick {
+                border-color: var(--teams-primary);
+                box-shadow: 0 0 0 1px var(--teams-primary-border);
+              }
+            }
+          }
+
+          .mat-mdc-form-field-label {
+            color: var(--teams-text-secondary);
+            font-size: var(--teams-font-size-sm);
+            font-weight: var(--teams-font-weight-medium);
+
+            &.mat-focused {
+              color: var(--teams-primary);
+            }
+          }
+
+          .mat-mdc-input-element {
+            color: var(--teams-text-primary);
+            font-size: var(--teams-font-size-base);
+            font-family: var(--teams-font-family);
+            background: transparent;
+            caret-color: var(--teams-primary);
+
+            &::placeholder {
+              color: var(--teams-text-placeholder);
+              opacity: 1;
+            }
+          }
+
+          // Icons dans les champs
+          .mat-mdc-form-field-icon-suffix {
+            .mat-icon {
+              color: var(--teams-text-tertiary);
+              transition: color var(--teams-transition-fast);
+            }
+          }
+
+          &.mat-focused .mat-mdc-form-field-icon-suffix .mat-icon {
+            color: var(--teams-primary);
+          }
+
+          // Messages d'erreur
+          mat-error {
+            color: var(--teams-error);
+            font-size: var(--teams-font-size-xs);
+            font-weight: var(--teams-font-weight-medium);
+            margin-top: var(--teams-spacing-xs);
+          }
+        }
+
+        // Bouton de connexion
+        .login-button {
+          @include teams-button-primary;
+          height: 48px;
+          font-size: var(--teams-font-size-base);
+          font-weight: var(--teams-font-weight-semibold);
+          border-radius: var(--teams-radius-md);
+          margin-top: var(--teams-spacing-md);
+          position: relative;
+          overflow: hidden;
+
+          &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+              90deg,
+              transparent,
+              rgba(255, 255, 255, 0.1),
+              transparent
+            );
+            transition: left 0.5s ease;
+          }
+
+          &:hover::before {
+            left: 100%;
+          }
+
+          // État de chargement
+          &:disabled {
+            background: var(--teams-text-disabled);
+            border-color: var(--teams-text-disabled);
+            color: var(--teams-bg-tertiary);
+            cursor: not-allowed;
+
+            &::before {
+              display: none;
+            }
+          }
+
+          // Spinner
+          mat-spinner {
+            margin-right: var(--teams-spacing-sm);
+            
+            circle {
+              stroke: currentColor;
+            }
+          }
+        }
+      }
+    }
+
+    // Actions (lien inscription)
+    .card-actions {
+      background: var(--teams-bg-tertiary);
+      border-top: 1px solid var(--teams-border-default);
+      padding: var(--teams-spacing-lg) var(--teams-spacing-xxl);
+      display: flex;
+      justify-content: center;
+
+      .register-text {
+        color: var(--teams-text-secondary);
+        font-size: var(--teams-font-size-sm);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: var(--teams-spacing-xs);
+
+        button {
+          @include teams-button-secondary;
+          padding: var(--teams-spacing-xs) var(--teams-spacing-sm);
+          min-width: auto;
+          font-size: var(--teams-font-size-sm);
+          font-weight: var(--teams-font-weight-semibold);
+          color: var(--teams-primary);
+          border: none;
+          background: transparent;
+          text-decoration: underline;
+          text-underline-offset: 2px;
+
+          &:hover {
+            background: var(--teams-primary-light) !important;
+            color: var(--teams-primary) !important;
+            text-decoration: none;
+            border-radius: var(--teams-radius-sm);
+            transform: translateY(-1px);
+          }
+
+          &:focus {
+            outline: 2px solid var(--teams-primary-border);
+            outline-offset: 2px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// ================================================
+// ANIMATIONS
+// ================================================
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.login-card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+// ================================================
+// RESPONSIVE DESIGN
+// ================================================
+
+@media (max-width: 480px) {
+  .login-container {
+    padding: var(--teams-spacing-lg);
+
+    .login-card {
+      mat-card-header {
+        padding: var(--teams-spacing-xl);
+
+        .title-wrapper {
+          flex-direction: column;
+          gap: var(--teams-spacing-sm);
+
+          .chat-icon {
+            font-size: 28px;
+            width: 28px;
+            height: 28px;
+          }
+        }
+
+        mat-card-title {
+          font-size: var(--teams-font-size-lg);
+        }
+      }
+
+      mat-card-content {
+        padding: var(--teams-spacing-xl);
+
+        .login-form {
+          gap: var(--teams-spacing-lg);
+
+          .login-button {
+            height: 44px;
+            font-size: var(--teams-font-size-sm);
+          }
+        }
+      }
+
+      .card-actions {
+        padding: var(--teams-spacing-md) var(--teams-spacing-xl);
+
+        .register-text {
+          flex-direction: column;
+          text-align: center;
+          gap: var(--teams-spacing-sm);
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 360px) {
+  .login-container {
+    padding: var(--teams-spacing-md);
+  }
+}
+
+// ================================================
+// ÉTATS DE FOCUS ET HOVER
+// ================================================
+
+.login-card {
+  &:hover {
+    box-shadow: var(--teams-shadow-xl);
+    transform: translateY(-2px);
+  }
+}
+
+// Améliorer l'accessibilité
+.login-button:focus-visible {
+  outline: 3px solid var(--teams-primary-border);
+  outline-offset: 2px;
+}
+
+// Indicateurs visuels pour les champs requis
+mat-form-field.mat-form-field-required:not(.mat-form-field-disabled) {
+  .mat-mdc-form-field-label::after {
+    content: ' *';
+    color: var(--teams-error);
+  }
+}
+
+// ================================================
+// STYLES POUR LES SNACKBARS (héritées du global)
+// ================================================
+
+:host ::ng-deep {
+  .success-snackbar {
+    background-color: var(--teams-success) !important;
+    color: white !important;
+  }
+
+  .error-snackbar {
+    background-color: var(--teams-error) !important;
+    color: white !important;
+  }
+}

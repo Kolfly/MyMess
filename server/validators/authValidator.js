@@ -273,6 +273,19 @@ class AuthValidator {
     ];
   }
 
+  // 📧 VALIDATION POUR LE RENVOI DE VÉRIFICATION D'EMAIL
+  static getResendVerificationValidation() {
+    return [
+      body('email')
+        .trim()
+        .normalizeEmail()
+        .isEmail()
+        .withMessage('Veuillez fournir une adresse email valide')
+        .isLength({ min: 5, max: 100 })
+        .withMessage('L\'email doit faire entre 5 et 100 caractères')
+    ];
+  }
+
   // 📧 VALIDATION POUR LA RÉINITIALISATION DE MOT DE PASSE (pour plus tard)
   static getPasswordResetRequestValidation() {
     return [

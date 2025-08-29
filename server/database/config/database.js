@@ -3,6 +3,7 @@ require('dotenv').config();
 
 // Cette fonction crée notre instance Sequelize de façon intelligente
 const createSequelizeInstance = () => {
+  
   let sequelize;
 
   // Stratégie 1: Si on a une DATABASE_URL complète (plus simple et sécurisé)
