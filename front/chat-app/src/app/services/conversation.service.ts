@@ -378,6 +378,66 @@ export class ConversationService {
   }
 
   // ================================================
+  // GESTION DES GROUPES (US012)
+  // ================================================
+
+  // 👤 AJOUTER DES MEMBRES À UN GROUPE
+  addMembersToGroup(conversationId: string, memberIds: string[]): Observable<any> {
+    return this.http.post(`http://localhost:3000/api/groups/${conversationId}/members`,
+      { memberIds },
+      { headers: this.authService.getAuthHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
+  // ❌ SUPPRIMER UN MEMBRE D'UN GROUPE
+  removeMemberFromGroup(conversationId: string, memberId: string): Observable<any> {
+    return this.http.delete(`http://localhost:3000/api/groups/${conversationId}/members/${memberId}`,
+      { headers: this.authService.getAuthHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
+  // ⚙️ MODIFIER LES PARAMÈTRES D'UN GROUPE
+  updateGroupSettings(conversationId: string, name: string, description?: string): Observable<any> {
+    return this.http.put(`http://localhost:3000/api/groups/${conversationId}/settings`,
+      { name, description },
+      { headers: this.authService.getAuthHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
+  // 👑 MODIFIER LE RÔLE D'UN MEMBRE
+  updateMemberRole(conversationId: string, memberId: string, role: string): Observable<any> {
+    return this.http.patch(`http://localhost:3000/api/groups/${conversationId}/members/${memberId}/role`,
+      { role },
+      { headers: this.authService.getAuthHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
+  // 📋 OBTENIR LES DÉTAILS D'UN GROUPE
+  getGroupDetails(conversationId: string): Observable<any> {
+    return this.http.get(`http://localhost:3000/api/groups/${conversationId}/details`,
+      { headers: this.authService.getAuthHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
+  // ================================================
+  // GESTION DES CONVERSATIONS (US023 & US025)
+  // ================================================
+
+  // 🗑️ SUPPRIMER UNE CONVERSATION
+  deleteConversation(conversationId: string): Observable<any> {
+    return this.http.delete(`http://localhost:3000/api/messages/conversations/${conversationId}`,
+      { headers: this.authService.getAuthHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
+  // 🚪 QUITTER UN GROUPE
+  leaveGroup(conversationId: string): Observable<any> {
+    return this.http.post(`http://localhost:3000/api/groups/${conversationId}/leave`, {},
+      { headers: this.authService.getAuthHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
+  // ================================================
   // GESTION D'ERREURS
   // ================================================
 

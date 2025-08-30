@@ -1,0 +1,249 @@
+// ================================================
+// CRÉATION DE GROUPE (US011) - TEAMS STYLE
+// ================================================
+
+.group-creation-container {
+  padding: 16px;
+  background: #2d2d30 !important;
+  border-bottom: 1px solid #3e3e42;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  color: #ffffff !important;
+  
+  // Force tous les textes à être visibles en blanc
+  *, span, div, h4, h5, label, input, textarea {
+    color: #ffffff !important;
+  }
+  
+  // Styles pour les champs de saisie
+  .mat-mdc-form-field {
+    .mat-mdc-text-field-wrapper {
+      background-color: #3e3e42 !important;
+    }
+    
+    .mat-mdc-form-field-input-control input,
+    .mat-mdc-form-field-input-control textarea {
+      color: #ffffff !important;
+      background-color: transparent !important;
+    }
+    
+    .mat-mdc-form-field-label {
+      color: #cccccc !important;
+    }
+  }
+  
+  .group-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    
+    h4 {
+      margin: 0;
+      color: #242424 !important;
+      font-size: 1.1em;
+      font-weight: 600;
+    }
+    
+    .group-field {
+      width: 100%;
+    }
+    
+    .member-search {
+      .search-field {
+        width: 100%;
+        margin-bottom: 8px;
+      }
+      
+      .search-loading {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px;
+        color: #cccccc;
+        font-size: 0.9em;
+        text-align: center;
+        
+        .spinning {
+          animation: spin 1s linear infinite;
+        }
+      }
+      
+      .users-list {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #3e3e42;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        background: #1e1e1e;
+        
+        .user-item {
+          display: flex;
+          align-items: center;
+          padding: 8px 12px;
+          cursor: pointer;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          transition: background-color 0.2s;
+          
+          &:last-child {
+            border-bottom: none;
+          }
+          
+          &:hover {
+            background: #3e3e42;
+          }
+          
+          &.selected {
+            background: rgba(25, 118, 210, 0.3);
+            
+            .selection-icon {
+              color: #1976d2;
+            }
+          }
+          
+          .user-avatar {
+            margin-right: 12px;
+            
+            .avatar-initials {
+              width: 32px;
+              height: 32px;
+              border-radius: 50%;
+              background: #1976d2;
+              color: white;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-weight: 500;
+              font-size: 0.8em;
+            }
+          }
+          
+          .user-info {
+            flex: 1;
+            
+            .user-name {
+              font-weight: 500;
+              color: #242424;
+              font-size: 0.9em;
+              margin-bottom: 2px;
+            }
+            
+            .user-email {
+              color: #cccccc;
+              font-size: 0.8em;
+            }
+          }
+          
+          .selection-icon {
+            color: rgba(0, 0, 0, 0.3);
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+          }
+        }
+      }
+      
+      .selected-members {
+        padding: 12px;
+        background: rgba(25, 118, 210, 0.2);
+        border-radius: 8px;
+        border: 1px solid #1976d2;
+        
+        h5 {
+          margin: 0 0 8px 0;
+          color: #1976d2;
+          font-size: 0.9em;
+          font-weight: 600;
+        }
+        
+        .selected-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          
+          .selected-member {
+            display: flex;
+            align-items: center;
+            background: #1976d2;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 16px;
+            font-size: 0.8em;
+            gap: 4px;
+            
+            button {
+              width: 16px;
+              height: 16px;
+              min-height: 16px;
+              min-width: 16px;
+              padding: 0;
+              background: rgba(255, 255, 255, 0.2);
+              border-radius: 50%;
+              
+              &:hover {
+                background: rgba(255, 255, 255, 0.3);
+              }
+              
+              mat-icon {
+                font-size: 12px;
+                width: 12px;
+                height: 12px;
+                color: white;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    .group-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      padding-top: 8px;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+      
+      button {
+        border-radius: 8px;
+        
+        &[color="basic"] {
+          background: #3e3e42 !important;
+          border: 1px solid #555 !important;
+          color: #ffffff !important;
+          
+          &:hover {
+            background: #4a4a4e !important;
+            border-color: #666 !important;
+          }
+        }
+        
+        &[color="primary"] {
+          background: #1976d2 !important;
+          color: white !important;
+          border: none !important;
+          
+          &:hover:not(:disabled) {
+            background: #1565c0 !important;
+          }
+          
+          &:disabled {
+            background: #ccc !important;
+            color: #999 !important;
+            cursor: not-allowed;
+          }
+        }
+        
+        mat-icon {
+          margin-right: 4px;
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

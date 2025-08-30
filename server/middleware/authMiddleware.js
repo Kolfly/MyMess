@@ -289,5 +289,6 @@ module.exports = {
   requireRole,
   requireOwnership,
   logAuthenticatedRequests,
-  checkTokenExpiration
+  checkTokenExpiration,
+  authenticateToken: authMiddleware  
 };

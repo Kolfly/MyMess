@@ -29,6 +29,13 @@ router.post('/conversations/private',
   messageController.createPrivateConversation
 );
 
+// 📋 RÉCUPÉRER DEMANDES EN ATTENTE - GET /api/messages/conversations/pending
+// IMPORTANT: Cette route DOIT être avant :conversationId pour éviter les conflits
+router.get('/conversations/pending',
+  authMiddleware,
+  messageController.getPendingConversations
+);
+
 // 📄 DÉTAILS CONVERSATION - GET /api/messages/conversations/:conversationId
 router.get('/conversations/:conversationId',
   authMiddleware,
@@ -64,6 +71,20 @@ router.delete('/:messageId',
   messageController.deleteMessage
 );
 
+// ✅ ACCEPTER UNE CONVERSATION - POST /api/messages/conversations/:conversationId/accept
+router.post('/conversations/:conversationId/accept',
+  authMiddleware,
+  messageValidator.getAcceptConversationValidation(),
+  messageController.acceptConversation
+);
+
+// ❌ REFUSER UNE CONVERSATION - POST /api/messages/conversations/:conversationId/reject
+router.post('/conversations/:conversationId/reject',
+  authMiddleware,
+  messageValidator.getRejectConversationValidation(),
+  messageController.rejectConversation
+);
+
 // 👥 CRÉER GROUPE - POST /api/messages/conversations/group
 router.post('/conversations/group',
   authMiddleware,
@@ -75,6 +96,12 @@ router.post('/conversations/group',
 router.get('/stats',
   authMiddleware,
   messageController.getMessageStats
+);
+
+// 🗑️ SUPPRIMER UNE CONVERSATION - DELETE /api/messages/conversations/:conversationId
+router.delete('/conversations/:conversationId',
+  authMiddleware,
+  messageController.deleteConversation
 );
 
 module.exports = router;

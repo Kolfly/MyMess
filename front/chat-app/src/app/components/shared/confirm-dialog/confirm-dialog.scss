@@ -1,0 +1,37 @@
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.dialog-icon {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+  
+  &.danger {
+    color: #f44336;
+  }
+  
+  &.warning {
+    color: #ff9800;
+  }
+  
+  &.info {
+    color: #2196f3;
+  }
+}
+
+.dialog-message {
+  font-size: 16px;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 24px;
+}

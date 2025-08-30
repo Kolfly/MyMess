@@ -24,14 +24,20 @@
   //US010 - Indicateur de frappe
   En tant qu'utilisateur, je veux voir quand quelqu'un tape un message ("Alice tape...").
 
-  //US022 - en tant q'utilisateur, je veux pouvoir accepter ou refuser si quelqu'un demarre une conversation avec moi si je refuse cela supprime la conversation de ma liste de conversation si j'accepte cela creer et lance la conversation 
+  //US022 - en tant q'utilisateur, je veux pouvoir accepter ou refuser si quelqu'un demarre une conversation avec moi si je refuse cela supprime la conversation de ma liste de conversation si j'accepte cela creer et lance la conversation
+  
+  //US023 - Supprimer une conversation
+  En tant qu'utilisateur, je veux pouvoir supprimer une conversation de ma liste des conversations.
+  
+  //US025 - Quitter un groupe
+  En tant qu'utilisateur, je veux pouvoir quitter un groupe et que cela le supprime de ma liste des conversations. 
 
   👥 Conversations de groupe :
 
-  US011 - Créer un groupe
+  //US011 - Créer un groupe
   En tant qu'utilisateur, je veux créer un groupe de discussion en lui donnant un nom et en ajoutant des membres.
 
-  US012 - Gérer un groupe
+ // US012 - Gérer un groupe
   En tant que créateur de groupe, je veux pouvoir ajouter/supprimer des membres et modifier les paramètres.
 
   ⚙️ Profil et paramètres :

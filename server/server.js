@@ -221,11 +221,13 @@ console.log('✅ Routes de test configurées');
 const authRoutes = require('./routes/authRoutes-clean');
 const userRoutes = require('./routes/userRoutes-simple');
 const messageRoutes = require('./routes/messageRoutes-simple');
+const groupRoutes = require('./routes/groupRoutes');
 
 // Configuration des routes principales - RÉACTIVATION PROGRESSIVE
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/groups', groupRoutes);
 
 // Route de test temporaire - RÉACTIVÉE POUR TEST
 app.get('/api/test', (req, res) => {

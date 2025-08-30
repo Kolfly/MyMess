@@ -164,7 +164,7 @@ class SocketHandler {
       await this.joinUserConversations(socket);
 
       // Notifier les contacts que l'utilisateur est en ligne
-      this.notifyContactsUserOnline(socket.userId);
+      await this.notifyContactsUserOnline(socket.userId);
 
     } catch (error) {
       console.error('❌ Erreur handleConnection:', error);
@@ -190,7 +190,7 @@ class SocketHandler {
           if (userSocketsSet.size === 0) {
             this.userSockets.delete(userConnection.userId);
             await this.updateUserStatus(userConnection.userId, 'offline');
-            this.notifyContactsUserOffline(userConnection.userId);
+            await this.notifyContactsUserOffline(userConnection.userId);
           }
         }
       }
@@ -444,22 +444,86 @@ class SocketHandler {
     }
   }
 
-  notifyContactsUserOnline(userId) {
-    // TODO: Implémenter la notification aux contacts
-    this.io.emit('user:status_changed', {
-      userId,
-      status: 'online',
-      timestamp: new Date().toISOString()
-    });
+  async notifyContactsUserOnline(userId) {
+    try {
+      // Récupérer les conversations de l'utilisateur pour identifier ses contacts
+      const conversations = await messageService.getUserConversations(userId);
+      if (!conversations || !conversations.conversations) return;
+
+      // Extraire tous les contacts uniques (autres membres des conversations)
+      const contactIds = new Set();
+      for (const conv of conversations.conversations) {
+        if (conv.allMembers) {
+          for (const member of conv.allMembers) {
+            if (member.userId !== userId) {
+              contactIds.add(member.userId);
+            }
+          }
+        }
+      }
+
+      // Notifier seulement les contacts connectés
+      for (const contactId of contactIds) {
+        const contactSockets = this.userSockets.get(contactId);
+        if (contactSockets && contactSockets.size > 0) {
+          for (const socketId of contactSockets) {
+            const socket = this.io.sockets.sockets.get(socketId);
+            if (socket) {
+              socket.emit('user:status_changed', {
+                userId,
+                status: 'online',
+                timestamp: new Date().toISOString()
+              });
+            }
+          }
+        }
+      }
+
+      console.log(`👥 Statut 'online' notifié à ${contactIds.size} contacts pour l'utilisateur ${userId}`);
+    } catch (error) {
+      console.error('❌ Erreur notifyContactsUserOnline:', error);
+    }
   }
 
-  notifyContactsUserOffline(userId) {
-    // TODO: Implémenter la notification aux contacts
-    this.io.emit('user:status_changed', {
-      userId,
-      status: 'offline',
-      timestamp: new Date().toISOString()
-    });
+  async notifyContactsUserOffline(userId) {
+    try {
+      // Récupérer les conversations de l'utilisateur pour identifier ses contacts
+      const conversations = await messageService.getUserConversations(userId);
+      if (!conversations || !conversations.conversations) return;
+
+      // Extraire tous les contacts uniques (autres membres des conversations)
+      const contactIds = new Set();
+      for (const conv of conversations.conversations) {
+        if (conv.allMembers) {
+          for (const member of conv.allMembers) {
+            if (member.userId !== userId) {
+              contactIds.add(member.userId);
+            }
+          }
+        }
+      }
+
+      // Notifier seulement les contacts connectés
+      for (const contactId of contactIds) {
+        const contactSockets = this.userSockets.get(contactId);
+        if (contactSockets && contactSockets.size > 0) {
+          for (const socketId of contactSockets) {
+            const socket = this.io.sockets.sockets.get(socketId);
+            if (socket) {
+              socket.emit('user:status_changed', {
+                userId,
+                status: 'offline',
+                timestamp: new Date().toISOString()
+              });
+            }
+          }
+        }
+      }
+
+      console.log(`👥 Statut 'offline' notifié à ${contactIds.size} contacts pour l'utilisateur ${userId}`);
+    } catch (error) {
+      console.error('❌ Erreur notifyContactsUserOffline:', error);
+    }
   }
 
   async handleStatusChange(socket, data) {
@@ -468,7 +532,7 @@ class SocketHandler {
     if (['online', 'away', 'busy', 'offline'].includes(status)) {
       await this.updateUserStatus(socket.userId, status);
       
-      this.notifyContactsUserOnline(socket.userId);
+      await this.notifyContactsUserOnline(socket.userId);
     }
   }
 

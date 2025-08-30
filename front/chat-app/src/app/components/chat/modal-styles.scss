@@ -2,6 +2,8 @@
 // MODAL DES DEMANDES EN ATTENTE - US022
 // ================================================
 
+@import '../../../styles/teams-theme';
+
 .pending-modal-overlay {
   position: fixed;
   top: 0;
@@ -195,5 +197,21 @@
     color: var(--teams-warning);
     font-style: italic;
     margin-top: 4px;
+  }
+}
+
+// ================================================
+// STYLES POUR LES MENUS CONTEXTUELS (US023 & US025)
+// ================================================
+
+.delete-action {
+  color: var(--teams-error, #d13438) !important;
+  
+  mat-icon {
+    color: var(--teams-error, #d13438) !important;
+  }
+  
+  &:hover {
+    background: rgba(209, 52, 56, 0.1) !important;
   }
 }

@@ -1,0 +1,421 @@
+// ================================================
+// STYLES GESTION DE GROUPE (US012)
+// ================================================
+
+.group-management-modal {
+  width: 800px;
+  max-width: 90vw;
+  max-height: 90vh;
+  background: #2d2d30;
+  color: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  .modal-header {
+    background: #3c3c3c;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #555555;
+
+    h3 {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #ffffff;
+      font-size: 1.2rem;
+      font-weight: 500;
+
+      mat-icon {
+        color: #4CAF50;
+      }
+    }
+
+    button {
+      color: #ffffff;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+    }
+  }
+
+  .modal-body {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    // Sections principales
+    .settings-section,
+    .members-section,
+    .add-members-section {
+      mat-card {
+        background: #3c3c3c;
+        color: #ffffff;
+        border-radius: 8px;
+        border: 1px solid #555555;
+
+        mat-card-header {
+          border-bottom: 1px solid #555555;
+          padding-bottom: 16px;
+          margin-bottom: 16px;
+
+          mat-card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: 500;
+
+            mat-icon {
+              color: #2196F3;
+            }
+          }
+        }
+
+        mat-card-content {
+          padding: 16px 0 0 0;
+        }
+      }
+    }
+
+    // Section paramètres
+    .settings-section {
+      .form-row {
+        margin-bottom: 16px;
+
+        mat-form-field {
+          width: 100%;
+
+          &.mat-mdc-form-field {
+            .mat-mdc-form-field-flex {
+              background: #2d2d30;
+            }
+
+            .mat-mdc-text-field-wrapper {
+              background: #2d2d30;
+            }
+
+            input,
+            textarea {
+              color: #ffffff !important;
+            }
+
+            .mat-mdc-form-field-outline {
+              color: #666666;
+            }
+
+            .mat-mdc-floating-label {
+              color: #cccccc;
+            }
+
+            &.mat-focused {
+              .mat-mdc-form-field-outline-thick {
+                color: #2196F3;
+              }
+
+              .mat-mdc-floating-label {
+                color: #2196F3;
+              }
+            }
+          }
+        }
+      }
+
+      .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 16px;
+
+        button {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          &.mat-mdc-raised-button {
+            background: #2196F3;
+            color: #ffffff;
+
+            &:disabled {
+              background: #666666;
+              color: #999999;
+            }
+          }
+        }
+      }
+    }
+
+    // Section membres
+    .members-section {
+      .member-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 0;
+
+        .member-info {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+
+          .member-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #4CAF50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #ffffff;
+            font-size: 14px;
+          }
+
+          .member-details {
+            .member-name {
+              color: #ffffff;
+              font-weight: 500;
+              margin-bottom: 4px;
+            }
+
+            .member-role {
+              color: #cccccc;
+              font-size: 0.9rem;
+              text-transform: capitalize;
+            }
+          }
+        }
+
+        .member-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          button {
+            &.mat-mdc-button {
+              color: #ffffff;
+              border: 1px solid #555555;
+
+              &:hover {
+                background: rgba(255, 255, 255, 0.1);
+              }
+
+              &[color="warn"] {
+                color: #f44336;
+                border-color: #f44336;
+
+                &:hover {
+                  background: rgba(244, 67, 54, 0.1);
+                }
+              }
+
+              &:disabled {
+                color: #666666;
+                border-color: #444444;
+              }
+            }
+
+            mat-icon {
+              font-size: 18px;
+              width: 18px;
+              height: 18px;
+            }
+          }
+        }
+      }
+
+      .no-members {
+        text-align: center;
+        padding: 32px;
+        color: #cccccc;
+
+        mat-icon {
+          font-size: 48px;
+          width: 48px;
+          height: 48px;
+          margin-bottom: 16px;
+          color: #666666;
+        }
+
+        p {
+          margin: 0;
+          font-size: 1rem;
+        }
+      }
+
+      mat-divider {
+        border-color: #555555;
+        margin: 8px 0;
+      }
+    }
+
+    // Section ajout de membres
+    .add-members-section {
+      .available-members {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .available-member-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 0;
+
+        .member-info {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+
+          .member-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #FF9800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #ffffff;
+            font-size: 12px;
+          }
+
+          .member-name {
+            color: #ffffff;
+            font-weight: 500;
+          }
+        }
+
+        button {
+          &.mat-mdc-raised-button {
+            background: #4CAF50;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+
+            &:disabled {
+              background: #666666;
+              color: #999999;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .modal-footer {
+    border-top: 1px solid #555555;
+    padding: 16px 24px;
+    background: #3c3c3c;
+    display: flex;
+    justify-content: flex-end;
+
+    button {
+      color: #ffffff;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+    }
+  }
+
+  // Loading state
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    color: #cccccc;
+
+    mat-progress-spinner {
+      margin-bottom: 16px;
+
+      ::ng-deep {
+        circle {
+          stroke: #2196F3;
+        }
+      }
+    }
+
+    p {
+      margin: 0;
+      font-size: 1rem;
+    }
+  }
+}
+
+// Animation de rotation pour les icônes de chargement
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Menu déroulant pour les rôles
+.mat-mdc-menu-panel {
+  background: #3c3c3c !important;
+  border: 1px solid #555555 !important;
+
+  .mat-mdc-menu-item {
+    color: #ffffff !important;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    mat-icon {
+      color: #2196F3 !important;
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .group-management-modal {
+    width: 95vw;
+    height: 95vh;
+    margin: 2.5vh auto;
+
+    .modal-body {
+      padding: 16px;
+
+      .member-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+
+        .member-actions {
+          align-self: flex-end;
+        }
+      }
+
+      .available-member-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+
+        button {
+          align-self: flex-end;
+        }
+      }
+    }
+  }
+}

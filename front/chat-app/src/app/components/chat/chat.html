@@ -39,13 +39,20 @@
             matTooltip="Voir les demandes en attente">
             <mat-icon matBadge="{{ pendingConversationsCount() }}" 
                       [matBadgeHidden]="pendingConversationsCount() === 0"
-                      matBadgeColor="warn">notifications</mat-icon>
+                      matBadgeColor="warn"
+                      aria-hidden="false">notifications</mat-icon>
           </button>
           <button 
             mat-icon-button 
             (click)="toggleUserSearch()"
             [matTooltip]="showUserSearch() ? 'Fermer la recherche' : 'Démarrer une nouvelle conversation'">
             <mat-icon>{{ showUserSearch() ? 'close' : 'add' }}</mat-icon>
+          </button>
+          <button 
+            mat-icon-button
+            (click)="toggleGroupCreation()"
+            matTooltip="Créer un groupe">
+            <mat-icon>group_add</mat-icon>
           </button>
         </div>
       </div>
@@ -100,6 +107,118 @@
         <mat-divider></mat-divider>
       }
       
+      <!-- Zone de création de groupe (US011) -->
+      @if (showGroupCreation) {
+        <div class="group-creation-container">
+          <div class="group-form">
+            <h4>Créer un nouveau groupe</h4>
+            
+            <mat-form-field appearance="outline" class="group-field">
+              <mat-label>Nom du groupe</mat-label>
+              <input 
+                matInput 
+                [(ngModel)]="groupName"
+                placeholder="Nom du groupe..."
+                autocomplete="off"
+                maxlength="50">
+            </mat-form-field>
+            
+            <mat-form-field appearance="outline" class="group-field">
+              <mat-label>Description (optionnel)</mat-label>
+              <textarea 
+                matInput 
+                [(ngModel)]="groupDescription"
+                placeholder="Description du groupe..."
+                rows="2"
+                maxlength="200">
+              </textarea>
+            </mat-form-field>
+            
+            <div class="member-search">
+              <mat-form-field appearance="outline" class="search-field">
+                <mat-label>Rechercher des membres</mat-label>
+                <input 
+                  matInput 
+                  [(ngModel)]="memberSearchQuery"
+                  (input)="onMemberSearch($event)"
+                  placeholder="Nom ou email..."
+                  autocomplete="off">
+                <mat-icon matSuffix>search</mat-icon>
+              </mat-form-field>
+              
+              @if (isLoadingUsers()) {
+                <div class="search-loading">
+                  <mat-icon class="spinning">refresh</mat-icon>
+                  <span>Recherche en cours...</span>
+                </div>
+              }
+              
+              @if (availableUsers().length > 0) {
+                <div class="users-list">
+                  @for (user of availableUsers(); track user.id) {
+                    <div 
+                      class="user-item"
+                      [class.selected]="isMemberSelected(user)"
+                      (click)="toggleMemberSelection(user)">
+                      <div class="user-avatar">
+                        <div class="avatar-initials">
+                          {{ (user.displayName || user.username).substring(0, 2).toUpperCase() }}
+                        </div>
+                      </div>
+                      <div class="user-info">
+                        <div class="user-name">{{ user.displayName || user.username }}</div>
+                        <div class="user-email">{{ user.email }}</div>
+                      </div>
+                      <mat-icon class="selection-icon">
+                        {{ isMemberSelected(user) ? 'check_circle' : 'radio_button_unchecked' }}
+                      </mat-icon>
+                    </div>
+                  }
+                </div>
+              }
+              
+              @if (selectedMembers().length > 0) {
+                <div class="selected-members">
+                  <h5>Membres sélectionnés ({{ selectedMembers().length }})</h5>
+                  <div class="selected-list">
+                    @for (member of selectedMembers(); track member.id) {
+                      <div class="selected-member">
+                        <span>{{ member.displayName || member.username }}</span>
+                        <button 
+                          mat-icon-button 
+                          (click)="toggleMemberSelection(member)"
+                          matTooltip="Retirer">
+                          <mat-icon>close</mat-icon>
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+            
+            <div class="group-actions">
+              <button 
+                mat-raised-button
+                (click)="showGroupCreation = false"
+                color="basic">
+                Annuler
+              </button>
+              <button 
+                mat-raised-button 
+                color="primary"
+                (click)="createGroup()"
+                [disabled]="!groupName || groupName.trim().length === 0 || selectedMembers().length === 0">
+                <mat-icon>group_add</mat-icon>
+                Créer le groupe
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <mat-divider></mat-divider>
+      }
+      
       <mat-divider></mat-divider>
       
       <mat-nav-list class="conversations-list">
@@ -128,10 +247,33 @@
                     <mat-icon class="pending-badge" matTooltip="En attente d'acceptation">schedule</mat-icon>
                   }
                   @if (conversation.unreadCount && conversation.unreadCount > 0) {
-                    <mat-icon matBadge="{{ conversation.unreadCount }}" matBadgeColor="accent" class="unread-badge">
+                    <mat-icon matBadge="{{ conversation.unreadCount }}" matBadgeColor="accent" class="unread-badge" aria-hidden="false">
                       notifications
                     </mat-icon>
                   }
+                  
+                  <!-- Menu contextuel pour actions sur conversation -->
+                  <button 
+                    mat-icon-button 
+                    class="conversation-menu-trigger"
+                    [matMenuTriggerFor]="conversationMenu"
+                    (click)="$event.stopPropagation()"
+                    matTooltip="Options de conversation">
+                    <mat-icon>more_vert</mat-icon>
+                  </button>
+                  
+                  <mat-menu #conversationMenu="matMenu">
+                    @if (conversation.type === 'group') {
+                      <button mat-menu-item (click)="leaveGroup(conversation.id)">
+                        <mat-icon>exit_to_app</mat-icon>
+                        Quitter le groupe
+                      </button>
+                    }
+                    <button mat-menu-item (click)="deleteConversation(conversation.id)" class="delete-action">
+                      <mat-icon>delete</mat-icon>
+                      Supprimer la conversation
+                    </button>
+                  </mat-menu>
                 </div>
                 
                 @if (conversation.lastMessage) {
@@ -180,27 +322,45 @@
                       <mat-icon>{{ conversation.type === 'group' ? 'group' : 'person' }}</mat-icon>
                       <div class="info-text">
                         <div class="name">{{ getConversationDisplayName(conversation) }}</div>
-                        <div class="request-info">Souhaite démarrer une conversation</div>
+                        <!-- Affichage différent selon si c'est une demande reçue ou envoyée -->
+                        @if (conversation.createdBy === currentUser()?.id) {
+                          <div class="request-info">Demande envoyée</div>
+                        } @else {
+                          <div class="request-info">Souhaite démarrer une conversation</div>
+                        }
                       </div>
                     </div>
                     
                     <div class="conversation-actions">
-                      <button 
-                        mat-raised-button 
-                        color="warn"
-                        (click)="rejectConversation(conversation.id)"
-                        [disabled]="processingConversation() === conversation.id">
-                        <mat-icon>close</mat-icon>
-                        Refuser
-                      </button>
-                      <button 
-                        mat-raised-button 
-                        color="primary"
-                        (click)="acceptConversation(conversation.id)"
-                        [disabled]="processingConversation() === conversation.id">
-                        <mat-icon>check</mat-icon>
-                        Accepter
-                      </button>
+                      @if (conversation.createdBy === currentUser()?.id) {
+                        <!-- Demande envoyée par moi - bouton Annuler -->
+                        <button 
+                          mat-raised-button 
+                          color="warn"
+                          (click)="rejectConversation(conversation.id)"
+                          [disabled]="processingConversation() === conversation.id">
+                          <mat-icon>close</mat-icon>
+                          Annuler
+                        </button>
+                      } @else {
+                        <!-- Demande reçue - boutons Accepter/Refuser -->
+                        <button 
+                          mat-raised-button 
+                          color="warn"
+                          (click)="rejectConversation(conversation.id)"
+                          [disabled]="processingConversation() === conversation.id">
+                          <mat-icon>close</mat-icon>
+                          Refuser
+                        </button>
+                        <button 
+                          mat-raised-button 
+                          color="primary"
+                          (click)="acceptConversation(conversation.id)"
+                          [disabled]="processingConversation() === conversation.id">
+                          <mat-icon>check</mat-icon>
+                          Accepter
+                        </button>
+                      }
                     </div>
                   </div>
                   <mat-divider></mat-divider>
@@ -235,9 +395,19 @@
           </div>
           
           <div class="chat-actions">
-            <button mat-icon-button>
+            <button mat-icon-button [matMenuTriggerFor]="chatMenu" matTooltip="Plus d'options">
               <mat-icon>more_vert</mat-icon>
             </button>
+            
+            <mat-menu #chatMenu="matMenu">
+              @if (conversation.type === 'group' && canManageGroup()) {
+                <button mat-menu-item (click)="openGroupManagement()">
+                  <mat-icon>group</mat-icon>
+                  <span>Gérer le groupe</span>
+                </button>
+              }
+              <!-- Autres options du menu peuvent être ajoutées ici -->
+            </mat-menu>
           </div>
         </div>
         
@@ -367,4 +537,181 @@
       }
     </mat-sidenav-content>
   </mat-sidenav-container>
+
+  <!-- ================================================ -->
+  <!-- MODAL GESTION DE GROUPE (US012) -->
+  <!-- ================================================ -->
+  @if (showGroupManagement) {
+    <div class="modal-overlay" (click)="closeGroupManagement()">
+      <div class="modal-content group-management-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>
+            <mat-icon>group</mat-icon>
+            Gestion du groupe
+          </h3>
+          <button mat-icon-button (click)="closeGroupManagement()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        @if (isLoadingGroupDetails()) {
+          <div class="loading-container">
+            <mat-progress-spinner diameter="50"></mat-progress-spinner>
+            <p>Chargement des détails du groupe...</p>
+          </div>
+        } @else if (groupDetails(); as details) {
+          <div class="modal-body">
+            <!-- Paramètres du groupe -->
+            <mat-card class="settings-section">
+              <mat-card-header>
+                <mat-card-title>
+                  <mat-icon>settings</mat-icon>
+                  Paramètres du groupe
+                </mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Nom du groupe</mat-label>
+                    <input matInput [(ngModel)]="editGroupName" maxlength="100">
+                  </mat-form-field>
+                </div>
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Description (optionnel)</mat-label>
+                    <textarea matInput [(ngModel)]="editGroupDescription" rows="3" maxlength="500"></textarea>
+                  </mat-form-field>
+                </div>
+                <div class="form-actions">
+                  <button 
+                    mat-raised-button 
+                    color="primary"
+                    (click)="updateGroupSettings()"
+                    [disabled]="isProcessingGroupAction() || !editGroupName.trim()">
+                    @if (isProcessingGroupAction()) {
+                      <mat-icon class="spinning">refresh</mat-icon>
+                    } @else {
+                      <mat-icon>save</mat-icon>
+                    }
+                    Sauvegarder
+                  </button>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Liste des membres -->
+            <mat-card class="members-section">
+              <mat-card-header>
+                <mat-card-title>
+                  <mat-icon>people</mat-icon>
+                  Membres du groupe ({{ groupDetails()?.allMembers?.length || 0 }})
+                </mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                @if (groupDetails()?.allMembers && groupDetails()?.allMembers.length > 0) {
+                  @for (member of groupDetails()?.allMembers; track member.id) {
+                    <div class="member-item">
+                      <div class="member-info">
+                        <div class="member-avatar">
+                          {{ member.user.displayName.substring(0, 2).toUpperCase() }}
+                        </div>
+                        <div class="member-details">
+                          <div class="member-name">{{ member.user.displayName }}</div>
+                          <div class="member-role">{{ member.role === 'owner' ? 'Propriétaire' : member.role === 'admin' ? 'Administrateur' : 'Membre' }}</div>
+                        </div>
+                      </div>
+                      <div class="member-actions">
+                        <!-- Bouton changement de rôle -->
+                        @if (canUpdateRole(member) && member.role !== 'owner') {
+                          <button 
+                            mat-button 
+                            [matMenuTriggerFor]="roleMenu"
+                            [disabled]="isProcessingGroupAction()">
+                            <mat-icon>supervisor_account</mat-icon>
+                            Rôle
+                          </button>
+                          <mat-menu #roleMenu="matMenu">
+                            @if (member.role !== 'admin') {
+                              <button mat-menu-item (click)="updateMemberRole(member.id, 'admin')">
+                                <mat-icon>admin_panel_settings</mat-icon>
+                                Promouvoir admin
+                              </button>
+                            }
+                            @if (member.role !== 'member') {
+                              <button mat-menu-item (click)="updateMemberRole(member.id, 'member')">
+                                <mat-icon>person</mat-icon>
+                                Rétrograder membre
+                              </button>
+                            }
+                          </mat-menu>
+                        }
+                        
+                        <!-- Bouton supprimer -->
+                        @if (canRemoveMember(member)) {
+                          <button 
+                            mat-button 
+                            color="warn"
+                            (click)="removeMemberFromGroup(member.id)"
+                            [disabled]="isProcessingGroupAction()">
+                            <mat-icon>person_remove</mat-icon>
+                            Supprimer
+                          </button>
+                        }
+                      </div>
+                    </div>
+                    <mat-divider></mat-divider>
+                  }
+                } @else {
+                  <div class="no-members">
+                    <mat-icon>people_outline</mat-icon>
+                    <p>Aucun membre trouvé</p>
+                  </div>
+                }
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Ajouter des membres -->
+            @if (availableMembersToAdd().length > 0) {
+              <mat-card class="add-members-section">
+                <mat-card-header>
+                  <mat-card-title>
+                    <mat-icon>person_add</mat-icon>
+                    Ajouter des membres
+                  </mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="available-members">
+                    @for (user of availableMembersToAdd(); track user.id) {
+                      <div class="available-member-item">
+                        <div class="member-info">
+                          <div class="member-avatar">
+                            {{ user.displayName.substring(0, 2).toUpperCase() }}
+                          </div>
+                          <div class="member-name">{{ user.displayName }}</div>
+                        </div>
+                        <button 
+                          mat-raised-button 
+                          color="primary"
+                          (click)="addMemberToGroup()"
+                          [disabled]="isProcessingGroupAction()">
+                          <mat-icon>add</mat-icon>
+                          Ajouter
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            }
+          </div>
+        }
+
+        <div class="modal-footer">
+          <button mat-button (click)="closeGroupManagement()">
+            Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 </div>

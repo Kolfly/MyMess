@@ -36,6 +36,13 @@ router.post('/conversations/group',
   messageController.createGroupConversation
 );
 
+// 📋 RÉCUPÉRER DEMANDES EN ATTENTE - GET /api/messages/conversations/pending
+// IMPORTANT: Cette route DOIT être avant :conversationId pour éviter les conflits
+router.get('/conversations/pending',
+  authMiddleware,
+  messageController.getPendingConversations
+);
+
 // 📄 DÉTAILS D'UNE CONVERSATION - GET /api/messages/conversations/:conversationId
 router.get('/conversations/:conversationId',
   authMiddleware,
@@ -60,12 +67,6 @@ router.post('/conversations/:conversationId/read',
 // ================================================
 // ROUTES DEMANDES DE CONVERSATION (US022)
 // ================================================
-
-// 📋 RÉCUPÉRER DEMANDES EN ATTENTE - GET /api/messages/conversations/pending
-router.get('/conversations/pending',
-  authMiddleware,
-  messageController.getPendingConversations
-);
 
 // ✅ ACCEPTER UNE CONVERSATION - POST /api/messages/conversations/:conversationId/accept
 router.post('/conversations/:conversationId/accept',

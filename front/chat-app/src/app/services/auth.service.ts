@@ -53,9 +53,9 @@ export class AuthService {
     if (token) {
       console.log('🔍 Token trouvé, vérification en cours...');
       
-      // Vérifier si le token est encore valide avec timeout plus court
+      // Vérifier si le token est encore valide avec timeout plus long
       this.getMe().pipe(
-        timeout(2000)
+        timeout(5000)
       ).subscribe({
         next: (response) => {
           if (response.success) {
@@ -67,17 +67,20 @@ export class AuthService {
             this.logout();
           }
           this.authInitialized = true;
+          console.log('🔍 AuthService: Initialisation terminée (success)');
         },
-        error: () => {
-          console.log('❌ Erreur validation token, déconnexion');
+        error: (error) => {
+          console.log('❌ Erreur validation token:', error.message);
           this.logout();
           this.authInitialized = true;
+          console.log('🔍 AuthService: Initialisation terminée (error)');
         }
       });
     } else {
       console.log('❌ Pas de token trouvé');
       this.isAuthenticatedSubject.next(false);
       this.authInitialized = true;
+      console.log('🔍 AuthService: Initialisation terminée (no token)');
     }
   }
 

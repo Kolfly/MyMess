@@ -2,6 +2,7 @@
 // Contrôleur pour toutes les actions liées aux messages et conversations
 
 const messageService = require('../services/messageService');
+const groupManagementService = require('../services/groupManagementService');
 const { validationResult } = require('express-validator');
 
 class MessageController {
@@ -62,6 +63,33 @@ class MessageController {
         req.user.id, 
         otherUserId
       );
+
+      // Notifier le destinataire via WebSocket qu'il a reçu une demande de conversation
+      if (global.socketHandler) {
+        // Récupérer les sockets du destinataire
+        const targetUserSockets = global.socketHandler.userSockets.get(otherUserId);
+        if (targetUserSockets && targetUserSockets.size > 0) {
+          for (const socketId of targetUserSockets) {
+            const socket = global.io.sockets.sockets.get(socketId);
+            if (socket) {
+              socket.emit('conversation:request_received', {
+                conversation,
+                requestFrom: {
+                  id: req.user.id,
+                  username: req.user.username,
+                  displayName: req.user.firstName && req.user.lastName 
+                    ? `${req.user.firstName} ${req.user.lastName}`
+                    : req.user.username
+                },
+                timestamp: new Date().toISOString()
+              });
+              console.log(`📨 Demande de conversation envoyée à ${otherUserId} (socket: ${socketId})`);
+            }
+          }
+        } else {
+          console.log(`📭 Utilisateur ${otherUserId} non connecté - demande en attente`);
+        }
+      }
 
       res.status(201).json({
         success: true,
@@ -664,6 +692,41 @@ class MessageController {
         timestamp: new Date().toISOString()
       }
     });
+  }
+
+  // ================================================
+  // GESTION DES CONVERSATIONS (US023 & US025)
+  // ================================================
+
+  // 🗑️ SUPPRIMER UNE CONVERSATION
+  async deleteConversation(req, res) {
+    try {
+      console.log(`🗑️ [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
+
+      const { conversationId } = req.params;
+
+      const result = await messageService.deleteConversation(conversationId, req.user.id);
+
+      res.status(200).json({
+        success: true,
+        message: 'Conversation supprimée avec succès',
+        data: result,
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error('❌ Erreur deleteConversation:', error.message);
+      
+      const statusCode = error.message.includes('non trouvée') ? 404 :
+                        error.message.includes('non autorisé') ? 403 : 500;
+
+      res.status(statusCode).json({
+        success: false,
+        message: error.message,
+        code: 'DELETE_CONVERSATION_ERROR',
+        timestamp: new Date().toISOString()
+      });
+    }
   }
 }
 

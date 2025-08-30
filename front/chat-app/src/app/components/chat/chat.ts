@@ -13,13 +13,16 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { Subscription, Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
 import { ConversationService, Conversation, Message } from '../../services/conversation.service';
 import { AuthService } from '../../services/auth.service';
 import { WebSocketService } from '../../services/websocket.service';
+import { ConfirmDialogComponent, ConfirmDialogData } from '../shared/confirm-dialog/confirm-dialog';
 
 @Component({
   selector: 'app-chat',
@@ -37,16 +40,18 @@ import { WebSocketService } from '../../services/websocket.service';
     MatFormFieldModule,
     MatDividerModule,
     MatMenuModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './chat.html',
-  styleUrl: './chat.scss'
+  styleUrls: ['./chat.scss', './group-creation.scss', './group-management.scss']
 })
 export class Chat implements OnInit, OnDestroy {
   private conversationService = inject(ConversationService);
   private authService = inject(AuthService);
   private websocketService = inject(WebSocketService);
   private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
   
   protected conversations = signal<Conversation[]>([]);
   protected selectedConversation = signal<Conversation | null>(null);
@@ -70,6 +75,24 @@ export class Chat implements OnInit, OnDestroy {
   protected pendingConversations = signal<Conversation[]>([]);
   showPendingConversations = false;
   protected processingConversation = signal<string | null>(null);
+  
+  // Création de groupe (US011)
+  showGroupCreation = false;
+  groupName = '';
+  groupDescription = '';
+  protected selectedMembers = signal<any[]>([]);
+  protected availableUsers = signal<any[]>([]);
+  protected isLoadingUsers = signal<boolean>(false);
+  memberSearchQuery = '';
+  
+  // Gestion de groupe (US012)
+  showGroupManagement = false;
+  protected groupDetails = signal<any>(null);
+  protected isLoadingGroupDetails = signal<boolean>(false);
+  editGroupName = '';
+  editGroupDescription = '';
+  protected availableMembersToAdd = signal<any[]>([]);
+  protected isProcessingGroupAction = signal<boolean>(false);
   
   // Indicateurs de frappe (US010)
   protected typingUsers = signal<string[]>([]);
@@ -598,6 +621,13 @@ export class Chat implements OnInit, OnDestroy {
     this.conversationService.getPendingConversations().subscribe({
       next: (response) => {
         if (response.success) {
+          console.log('🔍 DEBUG - Conversations en attente:', response.data.conversations);
+          console.log('🔍 DEBUG - Utilisateur actuel:', this.currentUser());
+          
+          response.data.conversations.forEach((conv: any) => {
+            console.log(`🔍 DEBUG - Conversation ${conv.id}: createdBy=${conv.createdBy}, currentUser=${this.currentUser()?.id}`);
+          });
+          
           this.pendingConversations.set(response.data.conversations);
         }
       },
@@ -676,6 +706,480 @@ export class Chat implements OnInit, OnDestroy {
         this.snackBar.open(message, 'Fermer', {
           duration: 5000,
           panelClass: ['error-snackbar']
+        });
+      }
+    });
+  }
+  
+  // ================================================
+  // CRÉATION DE GROUPE (US011)
+  // ================================================
+  
+  toggleGroupCreation(): void {
+    this.showGroupCreation = !this.showGroupCreation;
+    if (this.showGroupCreation) {
+      this.resetGroupForm();
+      this.loadAvailableUsers();
+    }
+  }
+  
+  resetGroupForm(): void {
+    this.groupName = '';
+    this.groupDescription = '';
+    this.memberSearchQuery = '';
+    this.selectedMembers.set([]);
+    this.availableUsers.set([]);
+  }
+  
+  loadAvailableUsers(): void {
+    this.isLoadingUsers.set(true);
+    this.authService.searchUsers('', 50).subscribe({
+      next: (response) => {
+        this.isLoadingUsers.set(false);
+        if (response.success) {
+          // Filtrer l'utilisateur actuel de la liste
+          const currentUser = this.currentUser();
+          const users = response.data.users.filter((user: any) => user.id !== currentUser?.id);
+          this.availableUsers.set(users);
+        }
+      },
+      error: (error) => {
+        this.isLoadingUsers.set(false);
+        console.error('Erreur lors du chargement des utilisateurs:', error);
+        this.snackBar.open('Erreur lors du chargement des utilisateurs', 'Fermer', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
+  }
+  
+  onMemberSearch(event: any): void {
+    const query = event.target.value;
+    this.memberSearchQuery = query;
+    
+    if (query.trim()) {
+      this.isLoadingUsers.set(true);
+      this.authService.searchUsers(query, 20).subscribe({
+        next: (response) => {
+          this.isLoadingUsers.set(false);
+          if (response.success) {
+            const currentUser = this.currentUser();
+            const users = response.data.users.filter((user: any) => user.id !== currentUser?.id);
+            this.availableUsers.set(users);
+          }
+        },
+        error: (error) => {
+          this.isLoadingUsers.set(false);
+          console.error('Erreur lors de la recherche:', error);
+        }
+      });
+    } else {
+      this.loadAvailableUsers();
+    }
+  }
+  
+  toggleMemberSelection(user: any): void {
+    const currentSelected = this.selectedMembers();
+    const isSelected = currentSelected.some(member => member.id === user.id);
+    
+    if (isSelected) {
+      this.selectedMembers.set(currentSelected.filter(member => member.id !== user.id));
+    } else {
+      this.selectedMembers.set([...currentSelected, user]);
+    }
+  }
+  
+  isMemberSelected(user: any): boolean {
+    return this.selectedMembers().some(member => member.id === user.id);
+  }
+  
+  createGroup(): void {
+    if (!this.groupName.trim()) {
+      this.snackBar.open('Le nom du groupe est obligatoire', 'Fermer', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
+    
+    if (this.selectedMembers().length === 0) {
+      this.snackBar.open('Veuillez sélectionner au moins un membre', 'Fermer', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
+    
+    const memberIds = this.selectedMembers().map(member => member.id);
+    
+    this.conversationService.createGroupConversation(
+      this.groupName.trim(),
+      this.groupDescription.trim() || undefined,
+      memberIds
+    ).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.snackBar.open('Groupe créé avec succès', 'Fermer', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+          
+          // Sélectionner automatiquement le nouveau groupe
+          this.conversationService.selectConversation(response.data);
+          
+          // Fermer le modal de création
+          this.showGroupCreation = false;
+          this.resetGroupForm();
+        }
+      },
+      error: (error) => {
+        const message = error.error?.message || 'Erreur lors de la création du groupe';
+        this.snackBar.open(message, 'Fermer', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
+  }
+
+  // ================================================
+  // GESTION DES GROUPES (US012)
+  // ================================================
+
+  openGroupManagement(): void {
+    const selectedConv = this.selectedConversation();
+    if (!selectedConv || selectedConv.type !== 'group') return;
+    
+    this.showGroupManagement = true;
+    this.loadGroupDetails();
+  }
+
+  closeGroupManagement(): void {
+    this.showGroupManagement = false;
+    this.resetGroupManagementForm();
+  }
+
+  loadGroupDetails(): void {
+    const selectedConv = this.selectedConversation();
+    if (!selectedConv) return;
+    
+    this.isLoadingGroupDetails.set(true);
+    
+    this.conversationService.getGroupDetails(selectedConv.id).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.groupDetails.set(response.data);
+          this.editGroupName = response.data.name || '';
+          this.editGroupDescription = response.data.description || '';
+        }
+        this.isLoadingGroupDetails.set(false);
+      },
+      error: (error) => {
+        console.error('Erreur chargement détails groupe:', error);
+        this.snackBar.open('Erreur lors du chargement des détails', 'Fermer', {
+          duration: 3000,
+          panelClass: ['error-snackbar']
+        });
+        this.isLoadingGroupDetails.set(false);
+      }
+    });
+  }
+
+  updateGroupSettings(): void {
+    const selectedConv = this.selectedConversation();
+    if (!selectedConv || !this.editGroupName.trim()) return;
+    
+    this.isProcessingGroupAction.set(true);
+    
+    this.conversationService.updateGroupSettings(
+      selectedConv.id,
+      this.editGroupName.trim(),
+      this.editGroupDescription.trim() || undefined
+    ).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.snackBar.open('Paramètres mis à jour', 'Fermer', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+          
+          // Recharger les détails et la liste des conversations
+          this.loadGroupDetails();
+          this.conversationService.loadConversations().subscribe();
+        }
+        this.isProcessingGroupAction.set(false);
+      },
+      error: (error) => {
+        const message = error.error?.message || 'Erreur lors de la mise à jour';
+        this.snackBar.open(message, 'Fermer', {
+          duration: 3000,
+          panelClass: ['error-snackbar']
+        });
+        this.isProcessingGroupAction.set(false);
+      }
+    });
+  }
+
+  addMemberToGroup(): void {
+    if (this.availableMembersToAdd().length === 0) return;
+    
+    const selectedConv = this.selectedConversation();
+    if (!selectedConv) return;
+    
+    // Pour l'exemple, ajouter le premier membre de la liste
+    const memberToAdd = this.availableMembersToAdd()[0];
+    this.isProcessingGroupAction.set(true);
+    
+    this.conversationService.addMembersToGroup(
+      selectedConv.id, 
+      [memberToAdd.id]
+    ).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.snackBar.open('Membre ajouté avec succès', 'Fermer', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+          
+          this.loadGroupDetails();
+          this.loadAvailableMembers();
+        }
+        this.isProcessingGroupAction.set(false);
+      },
+      error: (error) => {
+        const message = error.error?.message || 'Erreur lors de l\'ajout';
+        this.snackBar.open(message, 'Fermer', {
+          duration: 3000,
+          panelClass: ['error-snackbar']
+        });
+        this.isProcessingGroupAction.set(false);
+      }
+    });
+  }
+
+  removeMemberFromGroup(memberId: string): void {
+    const selectedConv = this.selectedConversation();
+    if (!selectedConv) return;
+    
+    this.isProcessingGroupAction.set(true);
+    
+    this.conversationService.removeMemberFromGroup(
+      selectedConv.id,
+      memberId
+    ).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.snackBar.open('Membre supprimé avec succès', 'Fermer', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+          
+          this.loadGroupDetails();
+          this.loadAvailableMembers();
+        }
+        this.isProcessingGroupAction.set(false);
+      },
+      error: (error) => {
+        const message = error.error?.message || 'Erreur lors de la suppression';
+        this.snackBar.open(message, 'Fermer', {
+          duration: 3000,
+          panelClass: ['error-snackbar']
+        });
+        this.isProcessingGroupAction.set(false);
+      }
+    });
+  }
+
+  updateMemberRole(memberId: string, newRole: string): void {
+    const selectedConv = this.selectedConversation();
+    if (!selectedConv) return;
+    
+    this.isProcessingGroupAction.set(true);
+    
+    this.conversationService.updateMemberRole(
+      selectedConv.id,
+      memberId,
+      newRole
+    ).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.snackBar.open('Rôle mis à jour avec succès', 'Fermer', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+          
+          this.loadGroupDetails();
+        }
+        this.isProcessingGroupAction.set(false);
+      },
+      error: (error) => {
+        const message = error.error?.message || 'Erreur lors de la mise à jour du rôle';
+        this.snackBar.open(message, 'Fermer', {
+          duration: 3000,
+          panelClass: ['error-snackbar']
+        });
+        this.isProcessingGroupAction.set(false);
+      }
+    });
+  }
+
+  loadAvailableMembers(): void {
+    // Simuler le chargement des membres disponibles
+    // En production, ceci devrait venir d'un service
+    this.availableMembersToAdd.set([]);
+  }
+
+  resetGroupManagementForm(): void {
+    this.editGroupName = '';
+    this.editGroupDescription = '';
+    this.groupDetails.set(null);
+    this.availableMembersToAdd.set([]);
+    this.isProcessingGroupAction.set(false);
+  }
+
+  canManageGroup(): boolean {
+    const currentUser = this.currentUser();
+    const selectedConv = this.selectedConversation();
+    
+    if (!currentUser || !selectedConv || selectedConv.type !== 'group') return false;
+    
+    // Seuls les propriétaires et admins peuvent gérer le groupe
+    const currentMember = selectedConv.allMembers?.find((member: any) => member.userId === currentUser.id);
+    return currentMember?.role === 'owner' || currentMember?.role === 'admin';
+  }
+
+  canRemoveMember(member: any): boolean {
+    const currentUser = this.currentUser();
+    const groupDetails = this.groupDetails();
+    
+    if (!currentUser || !groupDetails) return false;
+    
+    // Ne peut pas se supprimer soi-même
+    if (member.userId === currentUser.id) return false;
+    
+    // Le propriétaire ne peut pas être supprimé
+    if (member.role === 'owner') return false;
+    
+    const currentMember = groupDetails.allMembers?.find((m: any) => m.userId === currentUser.id);
+    
+    // Seul le propriétaire peut supprimer des admins
+    if (member.role === 'admin' && currentMember?.role !== 'owner') return false;
+    
+    // Les admins et propriétaires peuvent supprimer des membres normaux
+    return currentMember?.role === 'owner' || currentMember?.role === 'admin';
+  }
+
+  canUpdateRole(member: any): boolean {
+    const currentUser = this.currentUser();
+    const groupDetails = this.groupDetails();
+    
+    if (!currentUser || !groupDetails) return false;
+    
+    // Ne peut pas modifier son propre rôle
+    if (member.userId === currentUser.id) return false;
+    
+    // Seul le propriétaire peut modifier les rôles
+    const currentMember = groupDetails.allMembers?.find((m: any) => m.userId === currentUser.id);
+    return currentMember?.role === 'owner';
+  }
+
+  // ================================================
+  // GESTION DES CONVERSATIONS (US023 & US025)
+  // ================================================
+
+  deleteConversation(conversationId: string): void {
+    const conversationName = this.getConversationDisplayName(
+      this.conversations().find(c => c.id === conversationId)!
+    );
+
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Supprimer la conversation',
+        message: `Êtes-vous sûr de vouloir supprimer la conversation avec "${conversationName}" ? Cette action ne peut pas être annulée.`,
+        confirmText: 'Supprimer',
+        cancelText: 'Annuler',
+        type: 'danger'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.conversationService.deleteConversation(conversationId).subscribe({
+          next: (response) => {
+            if (response.success) {
+              // Retirer la conversation de la liste
+              const updatedConversations = this.conversations().filter(c => c.id !== conversationId);
+              this.conversations.set(updatedConversations);
+
+              // Si c'était la conversation sélectionnée, la désélectionner
+              if (this.selectedConversation()?.id === conversationId) {
+                this.selectedConversation.set(null);
+                this.messages.set([]);
+              }
+
+              this.snackBar.open('Conversation supprimée avec succès', 'Fermer', {
+                duration: 3000,
+                panelClass: ['success-snackbar']
+              });
+            }
+          },
+          error: (error) => {
+            console.error('❌ Erreur suppression conversation:', error);
+            this.snackBar.open('Erreur lors de la suppression de la conversation', 'Fermer', {
+              duration: 3000,
+              panelClass: ['error-snackbar']
+            });
+          }
+        });
+      }
+    });
+  }
+
+  leaveGroup(conversationId: string): void {
+    const conversation = this.conversations().find(c => c.id === conversationId);
+    if (!conversation) return;
+
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Quitter le groupe',
+        message: `Êtes-vous sûr de vouloir quitter le groupe "${conversation.name}" ? Vous ne recevrez plus les messages de ce groupe.`,
+        confirmText: 'Quitter',
+        cancelText: 'Annuler',
+        type: 'warning'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.conversationService.leaveGroup(conversationId).subscribe({
+          next: (response) => {
+            if (response.success) {
+              // Retirer le groupe de la liste
+              const updatedConversations = this.conversations().filter(c => c.id !== conversationId);
+              this.conversations.set(updatedConversations);
+
+              // Si c'était le groupe sélectionné, le désélectionner
+              if (this.selectedConversation()?.id === conversationId) {
+                this.selectedConversation.set(null);
+                this.messages.set([]);
+              }
+
+              this.snackBar.open('Vous avez quitté le groupe avec succès', 'Fermer', {
+                duration: 3000,
+                panelClass: ['success-snackbar']
+              });
+            }
+          },
+          error: (error) => {
+            console.error('❌ Erreur en quittant le groupe:', error);
+            this.snackBar.open('Erreur lors de la sortie du groupe', 'Fermer', {
+              duration: 3000,
+              panelClass: ['error-snackbar']
+            });
+          }
         });
       }
     });

@@ -126,12 +126,30 @@ class MessageService {
       // Vérifier si une conversation privée existe déjà (incluant celles refusées/en attente)
       const existingConv = await Conversation.findPrivateConversation(user1Id, user2Id);
       if (existingConv) {
-        // Si elle est rejetée, on peut la réactiver en statut pending
+        // Si elle est rejetée, on peut la réactiver en statut pending MAIS avec le nouveau créateur
         if (existingConv.status === 'rejected') {
-          await existingConv.update({ status: 'pending' });
+          await existingConv.update({ 
+            status: 'pending',
+            createdBy: user1Id // Mettre à jour le créateur pour la nouvelle demande
+          });
           return await this.getConversationDetails(existingConv.id, user1Id, { skipMemberCheck: true });
         }
-        return existingConv;
+        
+        // Si elle est déjà en pending ou acceptée, retourner les détails avec le bon contexte
+        if (existingConv.status === 'pending') {
+          console.log(`⚠️ Conversation en attente trouvée: créée par ${existingConv.createdBy}, demandée par ${user1Id}`);
+          // Si c'est la même personne qui refait la demande, retourner la conversation
+          if (existingConv.createdBy === user1Id) {
+            return await this.getConversationDetails(existingConv.id, user1Id, { skipMemberCheck: true });
+          }
+          // Si c'est l'autre personne, cela signifie qu'ils veulent tous les deux se parler
+          // On pourrait auto-accepter la conversation
+          await existingConv.update({ status: 'accepted' });
+          return await this.getConversationDetails(existingConv.id, user1Id, { skipMemberCheck: true });
+        }
+        
+        // Si elle est acceptée, la retourner
+        return await this.getConversationDetails(existingConv.id, user1Id, { skipMemberCheck: true });
       }
 
       // Vérifier que les deux utilisateurs existent
@@ -672,11 +690,70 @@ class MessageService {
     try {
       console.log(`📋 Récupération conversations en attente pour: ${userId}`);
       
-      return await this.getUserConversations(userId, { status: 'pending' });
+      const result = await this.getUserConversations(userId, { status: 'pending' });
+      
+      console.log(`🔍 DEBUG - Conversations pending trouvées pour ${userId}:`, result.conversations.length);
+      result.conversations.forEach(conv => {
+        console.log(`🔍 DEBUG - Conversation ${conv.id}: createdBy=${conv.createdBy}, status=${conv.status}, type=${conv.type}`);
+      });
+      
+      return result;
 
     } catch (error) {
       console.error('❌ Erreur getPendingConversations:', error);
       throw new Error(error.message || 'Erreur lors de la récupération des demandes en attente');
+    }
+  }
+
+  // ================================================
+  // GESTION DES CONVERSATIONS (US023)
+  // ================================================
+
+  // 🗑️ SUPPRIMER UNE CONVERSATION
+  async deleteConversation(conversationId, userId) {
+    try {
+      console.log(`🗑️ Suppression conversation ${conversationId} pour utilisateur ${userId}`);
+
+      // Vérifier que la conversation existe et que l'utilisateur en fait partie
+      const conversation = await Conversation.findByPk(conversationId, {
+        include: [{
+          model: ConversationMember,
+          as: 'members',
+          where: { userId, leftAt: null },
+          required: true
+        }]
+      });
+
+      if (!conversation) {
+        throw new Error('Conversation non trouvée ou accès non autorisé');
+      }
+
+      // Pour les conversations privées : marquer comme archivée pour cet utilisateur seulement
+      if (conversation.type === 'private') {
+        // Marquer le membre comme ayant quitté la conversation
+        await ConversationMember.update(
+          { leftAt: new Date() },
+          { 
+            where: { 
+              conversationId, 
+              userId 
+            } 
+          }
+        );
+
+        console.log(`✅ Conversation privée ${conversationId} archivée pour l'utilisateur ${userId}`);
+        return { action: 'archived', type: 'private' };
+      }
+
+      // Pour les groupes : utiliser la méthode leaveGroup
+      if (conversation.type === 'group') {
+        const groupManagementService = require('./groupManagementService');
+        return await groupManagementService.leaveGroup(conversationId, userId);
+      }
+
+    } catch (error) {
+      console.error('❌ Erreur deleteConversation:', error);
+      throw new Error(error.message || 'Erreur lors de la suppression de la conversation');
     }
   }
 
