@@ -1,0 +1,247 @@
+@use '../../../styles/teams-theme';
+
+.profile-dialog {
+  width: 450px;
+  max-width: 90vw;
+  
+  mat-dialog-content {
+    padding: var(--teams-spacing-lg) !important;
+    margin: 0;
+    max-height: 70vh;
+    overflow-y: auto;
+    
+    .profile-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: var(--teams-spacing-xl);
+      text-align: center;
+      
+      .profile-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--teams-primary) 0%, var(--teams-primary-light) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: var(--teams-spacing-md);
+        box-shadow: var(--teams-shadow-md);
+        
+        mat-icon {
+          font-size: 48px;
+          width: 48px;
+          height: 48px;
+          color: white;
+        }
+      }
+      
+      h2 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: var(--teams-font-weight-semibold);
+        color: var(--teams-text-primary);
+      }
+    }
+    
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--teams-spacing-lg);
+    }
+    
+    .full-width {
+      width: 100%;
+    }
+    
+    // Styles pour les champs de formulaire
+    mat-form-field {
+      &.mat-form-field-appearance-outline {
+        .mat-mdc-form-field-flex {
+          background: var(--teams-surface-primary);
+          border-radius: var(--teams-radius-md);
+        }
+        
+        .mat-mdc-form-field-outline {
+          border-color: var(--teams-border-default);
+          border-radius: var(--teams-radius-md);
+        }
+        
+        &:hover:not(.mat-focused) .mat-mdc-form-field-outline {
+          border-color: var(--teams-border-hover);
+        }
+        
+        &.mat-focused .mat-mdc-form-field-outline-thick {
+          border-color: var(--teams-primary);
+        }
+        
+        &.mat-form-field-invalid .mat-mdc-form-field-outline-thick {
+          border-color: var(--teams-error);
+        }
+      }
+      
+      .mat-mdc-form-field-label {
+        color: var(--teams-text-secondary);
+        
+        &.mat-focused {
+          color: var(--teams-primary);
+        }
+      }
+      
+      .mat-mdc-input-element {
+        color: var(--teams-text-primary);
+        
+        &[readonly] {
+          background: var(--teams-surface-secondary);
+          color: var(--teams-text-secondary);
+          cursor: not-allowed;
+        }
+        
+        &::placeholder {
+          color: var(--teams-text-placeholder);
+        }
+      }
+      
+      .mat-mdc-form-field-hint {
+        color: var(--teams-text-tertiary);
+        font-size: var(--teams-font-size-sm);
+      }
+      
+      mat-icon[matSuffix] {
+        color: var(--teams-text-secondary);
+      }
+    }
+    
+    // Styles pour les options de statut
+    .status-option {
+      display: flex;
+      align-items: center;
+      gap: var(--teams-spacing-sm);
+      
+      .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        
+        &.online {
+          background: var(--teams-success);
+        }
+        
+        &.away {
+          background: var(--teams-warning);
+        }
+        
+        &.busy {
+          background: var(--teams-error);
+        }
+      }
+    }
+  }
+  
+  mat-dialog-actions {
+    padding: var(--teams-spacing-md) var(--teams-spacing-lg) var(--teams-spacing-lg) !important;
+    margin: 0;
+    gap: var(--teams-spacing-sm);
+    
+    button {
+      min-width: 100px;
+      
+      &[mat-button] {
+        color: var(--teams-text-secondary);
+        
+        &:hover:not(:disabled) {
+          background: var(--teams-surface-hover);
+        }
+      }
+      
+      &[mat-raised-button] {
+        background: var(--teams-primary);
+        color: white;
+        
+        &:hover:not(:disabled) {
+          background: var(--teams-primary-hover);
+          transform: translateY(-1px);
+          box-shadow: var(--teams-shadow-md);
+        }
+        
+        &:disabled {
+          background: var(--teams-text-disabled);
+          color: var(--teams-surface-secondary);
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .profile-dialog {
+    width: 95vw;
+    
+    mat-dialog-content {
+      padding: var(--teams-spacing-md) !important;
+      
+      .profile-header {
+        margin-bottom: var(--teams-spacing-lg);
+        
+        .profile-avatar {
+          width: 64px;
+          height: 64px;
+          
+          mat-icon {
+            font-size: 36px;
+            width: 36px;
+            height: 36px;
+          }
+        }
+        
+        h2 {
+          font-size: 20px;
+        }
+      }
+      
+      form {
+        gap: var(--teams-spacing-md);
+      }
+    }
+    
+    mat-dialog-actions {
+      flex-direction: column;
+      
+      button {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// Animations
+.profile-dialog {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// Classes globales pour les snackbars
+:host ::ng-deep {
+  .success-snackbar {
+    --mdc-snackbar-container-color: var(--teams-success);
+    --mdc-snackbar-supporting-text-color: white;
+  }
+  
+  .error-snackbar {
+    --mdc-snackbar-container-color: var(--teams-error);
+    --mdc-snackbar-supporting-text-color: white;
+  }
+}

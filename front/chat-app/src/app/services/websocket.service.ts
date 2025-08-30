@@ -27,11 +27,15 @@ export class WebSocketService {
   // Indicateurs de frappe
   private typingUsersSubject = new BehaviorSubject<{[conversationId: string]: string[]}>({});
   
+  // Changements de statut utilisateur
+  private userStatusChangedSubject = new BehaviorSubject<{userId: string, status: string, displayName: string} | null>(null);
+  
   public connectionStatus$ = this.connectionStatusSubject.asObservable();
   public onlineUsers$ = this.onlineUsersSubject.asObservable();
   public newMessage$ = this.newMessageSubject.asObservable();
   public conversationUpdate$ = this.conversationUpdateSubject.asObservable();
   public typingUsers$ = this.typingUsersSubject.asObservable();
+  public userStatusChanged$ = this.userStatusChangedSubject.asObservable();
 
   constructor() {
     // Auto-connect si l'utilisateur est authentifié
@@ -227,6 +231,12 @@ export class WebSocketService {
       console.log('✅ Conversation marquée comme lue:', data);
     });
 
+    // Événements de changement de statut utilisateur (US013)
+    this.socket.on('user:statusChanged', (data) => {
+      console.log('🎨 Changement de statut utilisateur:', data);
+      this.handleUserStatusChanged(data);
+    });
+
     // Événements système
     this.socket.on('welcome', (data) => {
       console.log('🎉 Message de bienvenue:', data);
@@ -401,6 +411,11 @@ export class WebSocketService {
     };
     
     this.typingUsersSubject.next(updatedTypingUsers);
+  }
+
+  private handleUserStatusChanged(data: { userId: string, status: string, displayName: string }): void {
+    console.log('🎨 Traitement changement de statut:', data);
+    this.userStatusChangedSubject.next(data);
   }
 
   // Obtenir les utilisateurs qui tapent dans une conversation

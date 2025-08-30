@@ -183,6 +183,7 @@ export class AuthService {
   updateProfile(profileData: {
     displayName?: string;
     email?: string;
+    status?: 'online' | 'offline' | 'away' | 'busy';
   }): Observable<any> {
     return this.http.put(`${this.API_URL}/profile`, profileData, {
       headers: this.getAuthHeaders()
@@ -252,6 +253,18 @@ export class AuthService {
     // Mettre à jour les sujets
     this.currentUserSubject.next(user);
     this.isAuthenticatedSubject.next(true);
+    
+    // Passer automatiquement en statut "online" lors de la connexion
+    console.log('🔄 Passage automatique en statut "online" après connexion');
+    this.updateProfile({ status: 'online' }).subscribe({
+      next: (updateResponse) => {
+        console.log('✅ Statut mis à jour vers "online" après connexion');
+      },
+      error: (error) => {
+        console.warn('⚠️ Erreur lors de la mise à jour du statut vers "online":', error);
+        // Ne pas bloquer la connexion si la mise à jour du statut échoue
+      }
+    });
   }
 
   private handleError = (error: any) => {

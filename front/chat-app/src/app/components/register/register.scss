@@ -2,7 +2,7 @@
 // REGISTER COMPONENT - TEAMS DARK THEME
 // ================================================
 
-@import '../../../styles/teams-theme';
+@use '../../../styles/teams-theme';
 
 .register-container {
   min-height: 100vh;
@@ -29,7 +29,7 @@
   }
 
   .register-card {
-    @include teams-card;
+    @include teams-theme.teams-card;
     width: 100%;
     max-width: 500px;
     border-radius: var(--teams-radius-lg);
@@ -254,7 +254,7 @@
 
         // Bouton d'inscription
         .register-button {
-          @include teams-button-primary;
+          @include teams-theme.teams-button-primary;
           height: 52px;
           font-size: var(--teams-font-size-base);
           font-weight: var(--teams-font-weight-semibold);
@@ -325,7 +325,7 @@
           }
 
           .link-button {
-            @include teams-button-secondary;
+            @include teams-theme.teams-button-secondary;
             padding: var(--teams-spacing-xs) var(--teams-spacing-sm);
             min-width: auto;
             font-size: var(--teams-font-size-sm);
@@ -361,7 +361,7 @@
     width: 100%;
 
     .info-card {
-      @include teams-card;
+      @include teams-theme.teams-card;
       background: rgba(45, 45, 48, 0.7);
       backdrop-filter: blur(15px);
       border: 1px solid var(--teams-border-default);
@@ -438,39 +438,65 @@
 }
 
 // ================================================
-// RESPONSIVE DESIGN
+// RESPONSIVE DESIGN AMÉLIORÉ (US026)
 // ================================================
 
-@media (max-width: 600px) {
+// Tablettes (768px - 1024px)
+@media (min-width: 769px) and (max-width: 1024px) {
+  .register-container {
+    padding: var(--teams-spacing-lg);
+    
+    .register-card {
+      max-width: 550px;
+    }
+  }
+}
+
+// Tablettes et grands mobiles (481px - 768px)
+@media (max-width: 768px) {
   .register-container {
     padding: var(--teams-spacing-md);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     .register-card {
+      max-width: 90vw;
+      width: 100%;
+      
       .register-header {
-        padding: var(--teams-spacing-xl);
+        padding: var(--teams-spacing-lg);
 
         .title-container {
-          gap: var(--teams-spacing-sm);
+          gap: var(--teams-spacing-md);
 
           .app-icon {
-            font-size: 32px;
-            width: 32px;
-            height: 32px;
+            font-size: 36px;
+            width: 36px;
+            height: 36px;
           }
 
           h1 {
-            font-size: var(--teams-font-size-xl);
+            font-size: 24px;
           }
+        }
+        
+        mat-card-subtitle {
+          font-size: 14px;
+          text-align: center;
         }
       }
 
       .register-content {
-        padding: var(--teams-spacing-xl);
+        padding: var(--teams-spacing-lg);
 
         .register-form {
+          gap: var(--teams-spacing-md);
+          
           .name-row {
             flex-direction: column;
-            gap: var(--teams-spacing-lg);
+            gap: var(--teams-spacing-md);
 
             .half-width {
               width: 100%;
@@ -478,37 +504,370 @@
           }
 
           .register-button {
-            height: 48px;
+            height: 52px;
+            font-size: 16px;
+            margin-top: var(--teams-spacing-md);
+          }
+          
+          .terms-container {
+            margin: var(--teams-spacing-md) 0;
+            padding: var(--teams-spacing-md);
           }
 
-          .login-link p {
-            flex-direction: column;
-            gap: var(--teams-spacing-sm);
+          .login-link {
+            margin-top: var(--teams-spacing-md);
+            
+            p {
+              flex-direction: column;
+              gap: var(--teams-spacing-sm);
+              text-align: center;
+            }
           }
         }
       }
     }
 
-    .additional-info .info-card .features {
-      flex-direction: column;
-      gap: var(--teams-spacing-lg);
+    .additional-info {
+      margin-top: var(--teams-spacing-lg);
+      
+      .info-card .features {
+        flex-direction: column;
+        gap: var(--teams-spacing-md);
+        padding: var(--teams-spacing-md);
 
-      .feature {
-        flex-direction: row;
-        justify-content: center;
-        text-align: left;
+        .feature {
+          flex-direction: row;
+          justify-content: flex-start;
+          text-align: left;
+          padding: var(--teams-spacing-sm);
+          
+          mat-icon {
+            margin-right: var(--teams-spacing-md);
+          }
+        }
       }
     }
   }
 }
 
-@media (max-width: 400px) {
+// Petits mobiles (jusqu'à 480px)
+@media (max-width: 480px) {
   .register-container {
+    padding: var(--teams-spacing-sm);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 10px;
+
     .register-card {
-      .register-header .title-container {
-        flex-direction: column;
-        gap: var(--teams-spacing-sm);
+      max-width: 95vw;
+      width: 100%;
+      margin: 0;
+      
+      .register-header {
+        padding: var(--teams-spacing-md);
+        
+        .title-container {
+          flex-direction: column;
+          gap: var(--teams-spacing-sm);
+          
+          .app-icon {
+            font-size: 30px;
+            width: 30px;
+            height: 30px;
+          }
+          
+          h1 {
+            font-size: 20px;
+          }
+        }
+        
+        mat-card-subtitle {
+          font-size: 13px;
+          text-align: center;
+          margin-top: var(--teams-spacing-xs);
+        }
       }
+      
+      .register-content {
+        padding: var(--teams-spacing-md);
+        
+        .register-form {
+          gap: var(--teams-spacing-sm);
+          
+          // Champs de formulaire plus compacts
+          mat-form-field {
+            margin-bottom: var(--teams-spacing-xs);
+            
+            .mat-mdc-form-field-label {
+              font-size: 14px;
+            }
+            
+            .mat-mdc-input-element {
+              font-size: 16px !important; // Éviter le zoom iOS
+              padding: 12px;
+            }
+            
+            mat-icon[matSuffix] {
+              font-size: 20px;
+            }
+          }
+          
+          .register-button {
+            height: 48px;
+            font-size: 16px;
+            margin-top: var(--teams-spacing-sm);
+            width: 100%;
+          }
+          
+          .terms-container {
+            margin: var(--teams-spacing-sm) 0;
+            padding: var(--teams-spacing-sm);
+            
+            mat-checkbox {
+              .mdc-form-field {
+                font-size: 13px !important;
+                line-height: 1.3 !important;
+              }
+            }
+          }
+          
+          .login-link {
+            margin-top: var(--teams-spacing-sm);
+            padding-top: var(--teams-spacing-sm);
+            
+            p {
+              font-size: 13px;
+              flex-direction: column;
+              text-align: center;
+              gap: var(--teams-spacing-xs);
+            }
+          }
+        }
+      }
+    }
+    
+    .additional-info {
+      margin-top: var(--teams-spacing-sm);
+      
+      .info-card {
+        .features {
+          padding: var(--teams-spacing-sm);
+          flex-direction: column;
+          gap: var(--teams-spacing-sm);
+          
+          .feature {
+            flex-direction: row;
+            justify-content: flex-start;
+            text-align: left;
+            gap: var(--teams-spacing-sm);
+            font-size: 12px;
+            
+            mat-icon {
+              font-size: 20px !important;
+              height: 20px !important;
+              width: 20px !important;
+              flex-shrink: 0;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Très petits mobiles (max 360px) - RÉOPTIMISATION COMPLÈTE
+@media (max-width: 360px) {
+  .register-container {
+    padding: 2px;
+    min-height: 100vh;
+    height: 100vh;
+    display: block;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    .register-card {
+      width: calc(100vw - 4px);
+      max-width: none;
+      margin: 2px auto;
+      margin-bottom: 20px;
+      box-shadow: none;
+      border: 1px solid var(--teams-border-default);
+      display: block;
+      
+      .register-header {
+        padding: 8px;
+        text-align: center;
+        
+        .title-container {
+          flex-direction: column;
+          gap: 4px;
+          align-items: center;
+          
+          .app-icon {
+            font-size: 20px !important;
+            width: 20px !important;
+            height: 20px !important;
+            padding: 4px;
+          }
+          
+          h1 {
+            font-size: 16px !important;
+            margin: 0;
+          }
+        }
+        
+        mat-card-subtitle {
+          font-size: 11px !important;
+          margin-top: 4px;
+          line-height: 1.2;
+        }
+      }
+      
+      .register-content {
+        padding: 8px;
+        
+        .register-form {
+          gap: 6px;
+          
+          // Champs de formulaire ultra-compacts
+          mat-form-field {
+            width: 100% !important;
+            margin-bottom: 4px;
+            
+            &.mat-form-field-appearance-outline {
+              .mat-mdc-form-field-flex {
+                min-height: 40px !important;
+              }
+              
+              .mat-mdc-form-field-outline {
+                border-radius: 4px;
+              }
+            }
+            
+            .mat-mdc-form-field-label {
+              font-size: 12px !important;
+              top: 16px !important;
+            }
+            
+            .mat-mdc-input-element {
+              font-size: 16px !important;
+              padding: 8px 12px !important;
+              height: auto !important;
+            }
+            
+            mat-icon[matSuffix] {
+              font-size: 16px !important;
+              width: 16px !important;
+              height: 16px !important;
+            }
+            
+            mat-error {
+              font-size: 10px !important;
+              margin-top: 2px;
+            }
+          }
+          
+          // Ligne nom/prénom toujours en colonne
+          .name-row {
+            flex-direction: column !important;
+            gap: 6px;
+            
+            .half-width {
+              width: 100% !important;
+            }
+          }
+          
+          .register-button {
+            height: 44px !important;
+            font-size: 15px !important;
+            font-weight: 600 !important;
+            margin-top: 12px;
+            margin-bottom: 12px;
+            width: 100%;
+            border-radius: 6px;
+            background: var(--teams-primary) !important;
+            color: white !important;
+            border: none !important;
+            display: block !important;
+            position: relative;
+            z-index: 10;
+          }
+          
+          .terms-container {
+            margin: 6px 0;
+            padding: 6px;
+            background: rgba(45, 45, 48, 0.5);
+            border-radius: 4px;
+            
+            mat-checkbox {
+              transform: scale(0.9);
+              transform-origin: left center;
+              
+              .mdc-form-field {
+                font-size: 11px !important;
+                line-height: 1.2 !important;
+                
+                a {
+                  text-decoration: underline;
+                  color: var(--teams-primary);
+                }
+              }
+            }
+            
+            .terms-error {
+              font-size: 10px !important;
+              margin-top: 2px;
+            }
+          }
+          
+          .login-link {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--teams-border-default);
+            
+            p {
+              font-size: 11px !important;
+              text-align: center;
+              margin: 0;
+              
+              .link-button {
+                font-size: 11px !important;
+                padding: 2px 4px;
+                min-width: auto;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // Masquer les infos supplémentaires sur très petit écran pour gagner de la place
+    .additional-info {
+      display: none;
+    }
+  }
+  
+  // Ajustements globaux pour les très petits écrans
+  body {
+    font-size: 12px;
+    overflow: auto !important;
+    height: auto !important;
+  }
+  
+  html {
+    overflow: auto !important;
+    height: auto !important;
+  }
+  
+  // Réduire les snackbars
+  .mat-mdc-snack-bar-container {
+    margin: 4px !important;
+    max-width: calc(100vw - 8px) !important;
+    
+    .mat-mdc-snack-bar-label {
+      font-size: 12px !important;
     }
   }
 }

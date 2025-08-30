@@ -1,20 +1,63 @@
 <div class="chat-container">
   <!-- Toolbar -->
   <mat-toolbar color="primary" class="chat-toolbar">
+    <!-- Menu burger pour mobile -->
+    <button mat-icon-button 
+            class="mobile-menu-button"
+            (click)="sidenav.toggle()"
+            [class.hidden]="!isMobileView()">
+      <mat-icon>menu</mat-icon>
+    </button>
+    
     <span>MyMess Chat</span>
-    <span class="connection-status" [class.connected]="isConnected()" [class.disconnected]="!isConnected()">
-      <mat-icon>{{ isConnected() ? 'wifi' : 'wifi_off' }}</mat-icon>
-      <span class="status-text">{{ isConnected() ? 'En ligne' : 'Hors ligne' }}</span>
-    </span>
     <span class="spacer"></span>
     @if (currentUser(); as user) {
-      <span class="user-info">{{ user.displayName || user.username }}</span>
+      <!-- Avatar utilisateur avec indicateur de statut -->
+      <button mat-icon-button [matMenuTriggerFor]="statusMenu" class="user-avatar-trigger">
+        <div class="user-avatar-container">
+          <div class="avatar-initials">
+            {{ getCurrentUserInitials() }}
+          </div>
+          <span class="user-status-indicator" 
+                [style.background-color]="getStatusColor(user.status)"></span>
+        </div>
+      </button>
+      
+      <!-- Bouton menu principal -->
       <button mat-icon-button [matMenuTriggerFor]="userMenu">
-        <mat-icon>account_circle</mat-icon>
+        <mat-icon>more_vert</mat-icon>
       </button>
     }
     
+    <!-- Menu des statuts -->
+    <mat-menu #statusMenu="matMenu">
+      <button mat-menu-item (click)="changeUserStatus('online')" [class.active]="currentUser()?.status === 'online'">
+        <span class="status-option">
+          <span class="status-dot online"></span>
+          En ligne
+        </span>
+      </button>
+      <button mat-menu-item (click)="changeUserStatus('away')" [class.active]="currentUser()?.status === 'away'">
+        <span class="status-option">
+          <span class="status-dot away"></span>
+          Absent
+        </span>
+      </button>
+      <button mat-menu-item (click)="changeUserStatus('busy')" [class.active]="currentUser()?.status === 'busy'">
+        <span class="status-option">
+          <span class="status-dot busy"></span>
+          Occupé
+        </span>
+      </button>
+    </mat-menu>
+    
+    <!-- Menu utilisateur principal -->
     <mat-menu #userMenu="matMenu">
+      <button mat-menu-item (click)="openProfileDialog()">
+        <mat-icon>account_circle</mat-icon>
+        <span>Mon profil</span>
+      </button>
+      <mat-divider></mat-divider>
       <button mat-menu-item (click)="logout()">
         <mat-icon>logout</mat-icon>
         <span>Déconnexion</span>
@@ -26,9 +69,12 @@
   <mat-sidenav-container class="chat-content">
     <!-- Sidebar - Liste des conversations -->
     <mat-sidenav 
-      mode="side" 
-      opened="true" 
-      class="conversations-sidebar">
+      #sidenav
+      [mode]="isMobileView() ? 'over' : 'side'" 
+      [opened]="!isMobileView()" 
+      class="conversations-sidebar"
+      [fixedInViewport]="isMobileView()"
+      [fixedTopGap]="isMobileView() ? 64 : 0">
       
       <div class="sidebar-header">
         <h3>Conversations</h3>
@@ -235,6 +281,10 @@
                 </div>
                 @if (conversation.status === 'pending') {
                   <mat-icon class="status-indicator pending">schedule</mat-icon>
+                } @else if (conversation.type === 'private') {
+                  <!-- Indicateur de statut pour conversations privées -->
+                  <span class="user-status-indicator" 
+                        [style.background-color]="getConversationUserStatus(conversation)"></span>
                 }
               </div>
               

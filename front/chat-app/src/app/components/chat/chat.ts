@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
@@ -23,6 +24,7 @@ import { ConversationService, Conversation, Message } from '../../services/conve
 import { AuthService } from '../../services/auth.service';
 import { WebSocketService } from '../../services/websocket.service';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../shared/confirm-dialog/confirm-dialog';
+import { ProfileDialogComponent } from '../profile-dialog/profile-dialog.component';
 
 @Component({
   selector: 'app-chat',
@@ -52,6 +54,7 @@ export class Chat implements OnInit, OnDestroy {
   private websocketService = inject(WebSocketService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+  private breakpointObserver = inject(BreakpointObserver);
   
   protected conversations = signal<Conversation[]>([]);
   protected selectedConversation = signal<Conversation | null>(null);
@@ -103,9 +106,18 @@ export class Chat implements OnInit, OnDestroy {
   private searchSubject = new Subject<string>();
   
   @ViewChild('messagesContainer', { static: false }) messagesContainer!: ElementRef;
+  @ViewChild('sidenav', { static: false }) sidenav!: any;
   
   ngOnInit(): void {
     this.currentUser.set(this.authService.getCurrentUser());
+    
+    // Souscrire aux changements d'utilisateur
+    this.subscriptions.add(
+      this.authService.currentUser$.subscribe(user => {
+        this.currentUser.set(user);
+        console.log('🔄 Utilisateur mis à jour dans le signal:', user);
+      })
+    );
     
     // Souscrire aux conversations
     this.subscriptions.add(
@@ -198,6 +210,24 @@ export class Chat implements OnInit, OnDestroy {
         if (selectedConv) {
           const conversationTypers = typingData[selectedConv.id] || [];
           this.typingUsers.set(conversationTypers);
+        }
+      })
+    );
+
+    // Souscrire aux changements de statut utilisateur (US013)
+    this.subscriptions.add(
+      this.websocketService.userStatusChanged$.subscribe(statusChange => {
+        if (statusChange) {
+          console.log('🎨 Changement de statut reçu dans chat component:', statusChange);
+          
+          // Mettre à jour les statuts dans les conversations
+          this.updateUserStatusInConversations(statusChange.userId, statusChange.status);
+          
+          // Si c'est notre propre statut qui change, forcer la mise à jour de currentUser
+          const currentUserId = this.currentUser()?.id;
+          if (statusChange.userId === currentUserId) {
+            console.log('🎨 Mon propre statut a changé, mise à jour de l\'indicateur personnel');
+          }
         }
       })
     );
@@ -326,6 +356,11 @@ export class Chat implements OnInit, OnDestroy {
     
     // Sélectionner la nouvelle conversation
     this.conversationService.selectConversation(conversation);
+    
+    // Fermer le menu burger sur mobile après sélection (US026)
+    if (this.isMobileView() && this.sidenav) {
+      this.sidenav.close();
+    }
     
     // Réinitialiser les indicateurs de frappe pour la nouvelle conversation
     this.typingUsers.set([]);
@@ -537,7 +572,235 @@ export class Chat implements OnInit, OnDestroy {
   }
   
   logout(): void {
+    console.log('🔄 Début du processus de déconnexion');
+    
+    const user = this.currentUser();
+    if (!user) {
+      // Si pas d'utilisateur, déconnexion directe
+      this.performLogout();
+      return;
+    }
+
+    console.log('🔄 Changement du statut vers "away" avant déconnexion');
+    
+    // Changer le statut vers "absent" avant de se déconnecter (US015)
+    this.authService.updateProfile({ status: 'away' }).subscribe({
+      next: (response) => {
+        console.log('✅ Statut changé vers "absent" avant déconnexion');
+        this.performLogout();
+      },
+      error: (error) => {
+        console.warn('⚠️ Erreur lors du changement de statut, déconnexion quand même:', error);
+        // Même en cas d'erreur, on procède à la déconnexion
+        this.performLogout();
+      }
+    });
+  }
+
+  private performLogout(): void {
+    console.log('🔌 Nettoyage des ressources avant déconnexion');
+    
+    // Nettoyer la WebSocket
+    if (this.websocketService.isConnected()) {
+      this.websocketService.disconnect();
+      console.log('🔌 WebSocket déconnectée');
+    }
+    
+    // Nettoyer les subscriptions
+    this.subscriptions.unsubscribe();
+    console.log('🧹 Subscriptions nettoyées');
+    
+    // Appeler la déconnexion du service Auth
     this.authService.logout();
+    console.log('👋 Déconnexion effectuée');
+  }
+
+  // ================================================
+  // GESTION DU PROFIL UTILISATEUR (US013)
+  // ================================================
+
+  openProfileDialog(): void {
+    const dialogRef = this.dialog.open(ProfileDialogComponent, {
+      width: '450px',
+      maxWidth: '90vw',
+      disableClose: false,
+      autoFocus: true,
+      restoreFocus: true,
+      panelClass: ['profile-dialog-container']
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === true) {
+        console.log('✅ Profil utilisateur mis à jour avec succès');
+      }
+    });
+  }
+
+  changeUserStatus(status: 'online' | 'away' | 'busy'): void {
+    const user = this.currentUser();
+    if (!user) return;
+
+    console.log(`🔄 Changement de statut vers: ${status}`);
+    console.log(`🔄 Statut actuel de l'utilisateur:`, user.status);
+
+    this.authService.updateProfile({ status }).subscribe({
+      next: (response) => {
+        if (response.success) {
+          console.log(`✅ Réponse serveur pour changement de statut:`, response);
+          console.log(`✅ Nouveau statut dans la réponse:`, response.data?.user?.status);
+          
+          this.snackBar.open(`Statut changé vers "${this.getStatusLabel(status)}"`, 'Fermer', {
+            duration: 2000,
+            panelClass: ['success-snackbar']
+          });
+          console.log(`✅ Statut mis à jour vers: ${status}`);
+          
+          // Forcer la mise à jour du signal currentUser
+          if (response.data?.user) {
+            this.currentUser.set(response.data.user);
+            console.log(`🔄 Signal currentUser forcé avec:`, response.data.user);
+          }
+          
+          // Vérifier que le currentUser a été mis à jour
+          setTimeout(() => {
+            const updatedUser = this.currentUser();
+            console.log(`🎨 Statut après mise à jour:`, updatedUser?.status);
+            console.log(`🎨 Couleur du statut:`, this.getStatusColor(updatedUser?.status));
+          }, 100);
+        } else {
+          this.snackBar.open('Erreur lors du changement de statut', 'Fermer', {
+            duration: 3000,
+            panelClass: ['error-snackbar']
+          });
+        }
+      },
+      error: (error) => {
+        console.error('❌ Erreur changement de statut:', error);
+        this.snackBar.open('Erreur lors du changement de statut', 'Fermer', {
+          duration: 3000,
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
+  }
+
+  private getStatusLabel(status: string): string {
+    switch (status) {
+      case 'online': return 'En ligne';
+      case 'away': return 'Absent';
+      case 'busy': return 'Occupé';
+      default: return 'En ligne';
+    }
+  }
+
+  getStatusClass(status: string | undefined): string {
+    const currentStatus = status || 'online';
+    console.log('🎨 Status class:', currentStatus, 'for status:', status);
+    return currentStatus; // Retourne 'online', 'away', ou 'busy'
+  }
+
+  getCurrentUserInitials(): string {
+    const user = this.currentUser();
+    if (!user) return '?';
+
+    const displayName = user.displayName || user.username || '';
+    console.log('🎨 Getting initials for current user:', displayName);
+    
+    // Si on a un nom d'affichage avec des espaces, prendre les premières lettres des mots
+    if (displayName.includes(' ')) {
+      const words = displayName.split(' ').filter((word: string) => word.length > 0);
+      const initials = words.slice(0, 2).map((word: string) => word[0]).join('').toUpperCase();
+      console.log('🎨 Current user initials (words):', initials);
+      return initials;
+    }
+    
+    // Sinon, prendre les 2 premières lettres
+    const initials = displayName.substring(0, 2).toUpperCase();
+    console.log('🎨 Current user initials (substring):', initials);
+    return initials;
+  }
+
+  getStatusColor(status: string | undefined): string {
+    const currentStatus = status || 'online';
+    console.log('🎨 Status color requested for:', currentStatus);
+    const color = this.getColorByStatus(currentStatus);
+    console.log('🎨 Returning color:', color, 'for status:', currentStatus);
+    return color;
+  }
+
+  private getColorByStatus(status: string): string {
+    switch (status) {
+      case 'online': return '#4caf50'; // Vert
+      case 'away': return '#ff9800'; // Orange  
+      case 'busy': return '#f44336'; // Rouge
+      default: return '#4caf50'; // Vert par défaut
+    }
+  }
+
+  // ================================================
+  // RESPONSIVE DESIGN (US026)
+  // ================================================
+  
+  isMobileView(): boolean {
+    return this.breakpointObserver.isMatched(['(max-width: 768px)']);
+  }
+
+  getConversationUserStatus(conversation: Conversation): string {
+    // Seulement pour les conversations privées
+    if (conversation.type !== 'private') {
+      return '#4caf50'; // Vert par défaut
+    }
+
+    // Trouver l'autre utilisateur (pas nous)
+    const currentUserId = this.currentUser()?.id;
+    const otherUser = conversation.allMembers?.find(member => member.userId !== currentUserId);
+    
+    if (otherUser?.user?.status) {
+      console.log('🎨 Conversation user status:', otherUser.user.status, 'for user:', otherUser.user.displayName);
+      return this.getColorByStatus(otherUser.user.status);
+    }
+    
+    // Par défaut : en ligne (vert)
+    return this.getColorByStatus('online');
+  }
+
+  updateUserStatusInConversations(userId: string, newStatus: string): void {
+    console.log('🎨 Mise à jour statut dans conversations:', userId, newStatus);
+    
+    const currentConversations = this.conversations();
+    const updatedConversations = currentConversations.map(conversation => {
+      // Seulement pour les conversations privées
+      if (conversation.type === 'private') {
+        // Vérifier si l'utilisateur modifié est dans cette conversation
+        const updatedMembers = conversation.allMembers?.map(member => {
+          if (member.userId === userId) {
+            console.log('✅ Mise à jour statut pour membre:', member.user.displayName, 'vers:', newStatus);
+            return {
+              ...member,
+              user: {
+                ...member.user,
+                status: newStatus
+              }
+            };
+          }
+          return member;
+        });
+
+        if (updatedMembers) {
+          return {
+            ...conversation,
+            allMembers: updatedMembers
+          };
+        }
+      }
+      return conversation;
+    });
+
+    // Mettre à jour la liste des conversations si des changements ont été faits
+    if (JSON.stringify(currentConversations) !== JSON.stringify(updatedConversations)) {
+      console.log('🔄 Liste des conversations mise à jour avec nouveaux statuts');
+      this.conversations.set(updatedConversations);
+    }
   }
   
   // ================================================

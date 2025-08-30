@@ -1,6 +1,6 @@
-// Import du thème Teams
-@import '../../../styles/teams-theme';
-@import './modal-styles.scss';
+// Import du thème Teams (syntaxe moderne)
+@use '../../../styles/teams-theme';
+@use './modal-styles.scss';
 
 .chat-container {
   height: 100vh;
@@ -13,48 +13,140 @@
   position: relative;
   z-index: 10;
 
-  .connection-status {
-    display: flex;
-    align-items: center;
-    margin-right: 16px;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    transition: all 0.3s ease;
-
-    mat-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
-      margin-right: 4px;
-    }
-
-    &.connected {
-      background-color: rgba(76, 175, 80, 0.2);
-      color: #4caf50;
-
-      .status-text {
-        color: #4caf50;
-      }
-    }
-
-    &.disconnected {
-      background-color: rgba(244, 67, 54, 0.2);
-      color: #f44336;
-
-      .status-text {
-        color: #f44336;
-      }
-    }
-  }
-
   .spacer {
     flex: 1 1 auto;
   }
 
-  .user-info {
+  // Bouton menu burger pour mobile (US026)
+  .mobile-menu-button {
     margin-right: 16px;
-    font-weight: 500;
+    
+    &.hidden {
+      display: none;
+    }
+  }
+
+  // Avatar utilisateur dans la barre du haut - FORCER LES STYLES
+  .user-avatar-trigger {
+    position: relative !important;
+    margin-right: 8px !important;
+    padding: 4px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    width: 44px !important;
+    height: 44px !important;
+    
+    // Supprimer tous les styles Material par défaut
+    &.mat-mdc-icon-button {
+      padding: 4px !important;
+      width: 44px !important;
+      height: 44px !important;
+      
+      // Cacher complètement les icônes Material
+      mat-icon {
+        display: none !important;
+      }
+    }
+    
+    .user-avatar-container {
+      position: relative !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 100% !important;
+      height: 100% !important;
+      
+      .avatar-initials {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 36px !important;
+        height: 36px !important;
+        border-radius: 50% !important;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+        color: white !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        border: 2px solid rgba(255, 255, 255, 0.3) !important;
+        font-family: inherit !important;
+      }
+      
+      .user-status-indicator {
+        position: absolute !important;
+        bottom: -1px !important;
+        right: -1px !important;
+        width: 12px !important;
+        height: 12px !important;
+        border-radius: 50% !important;
+        border: 2px solid white !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+        z-index: 10 !important;
+        // La couleur sera définie dynamiquement via [style.background-color]
+      }
+    }
+    
+    &:hover .user-avatar-container .avatar-initials {
+      transform: scale(1.05) !important;
+      border-color: rgba(255, 255, 255, 0.5) !important;
+      transition: all 0.2s ease !important;
+    }
+  }
+}
+
+// Styles pour les menus de statut
+:host ::ng-deep {
+  .mat-mdc-menu-panel {
+    .status-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      
+      .status-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        
+        &.online {
+          background: var(--teams-success, #4caf50);
+        }
+        
+        &.away {
+          background: var(--teams-warning, #ff9800);
+        }
+        
+        &.busy {
+          background: var(--teams-error, #f44336);
+        }
+      }
+    }
+    
+    .mat-mdc-menu-item {
+      &.active {
+        background: var(--teams-surface-selected, #f5f5f5);
+        font-weight: 500;
+        
+        .status-option {
+          color: var(--teams-primary, #6264a7);
+        }
+      }
+      
+      &:hover:not(.active) {
+        background: var(--teams-surface-hover, #f8f9fa);
+      }
+    }
+  }
+  
+  // Classes pour les snackbars
+  .success-snackbar {
+    --mdc-snackbar-container-color: var(--teams-success, #4caf50);
+    --mdc-snackbar-supporting-text-color: white;
+  }
+  
+  .error-snackbar {
+    --mdc-snackbar-container-color: var(--teams-error, #f44336);
+    --mdc-snackbar-supporting-text-color: white;
   }
 }
 
@@ -193,6 +285,19 @@
                   background: var(--teams-warning, #ff8c00);
                   color: white;
                 }
+              }
+              
+              // Nouvel indicateur de statut utilisateur pour conversations privées
+              .user-status-indicator {
+                position: absolute;
+                bottom: -2px;
+                right: -2px;
+                width: 14px;
+                height: 14px;
+                border-radius: 50%;
+                border: 2px solid white;
+                background: #4caf50; // Vert par défaut
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
               }
             }
 
@@ -621,7 +726,7 @@
         }
 
         .send-button {
-          @include teams-button-primary;
+          @include teams-theme.teams-button-primary;
           height: 56px;
           padding: 0 var(--teams-spacing-lg);
           border-radius: var(--teams-radius-md);
@@ -695,45 +800,272 @@
   }
 }
 
-// Responsive design
-@media (max-width: 768px) {
+// ================================================
+// RESPONSIVE DESIGN AMÉLIORÉ (US026)
+// ================================================
+
+// Tablettes (768px - 1024px)
+@media (min-width: 769px) and (max-width: 1024px) {
   .chat-content .conversations-sidebar {
-    width: 280px;
+    width: 300px;
+  }
+
+  .chat-main .messages-container .message .message-bubble {
+    max-width: 80%;
+  }
+}
+
+// Petites tablettes et grands mobiles (481px - 768px)
+@media (max-width: 768px) {
+  .chat-toolbar {
+    padding: 0 8px;
+    
+    .mobile-menu-button {
+      display: block;
+    }
+    
+    span:first-of-type {
+      font-size: 16px;
+      margin-left: 8px;
+    }
+  }
+
+  .chat-content {
+    .conversations-sidebar {
+      width: 320px;
+      
+      // En mode overlay sur tablette
+      &.mat-drawer-over {
+        box-shadow: var(--teams-shadow-lg);
+      }
+    }
+    
+    .mat-drawer-content {
+      margin-left: 0 !important;
+    }
   }
 
   .chat-main {
-    .messages-container .message .message-bubble {
-      max-width: 85%;
+    .messages-container {
+      padding: 12px;
+      
+      .message .message-bubble {
+        max-width: 85%;
+        padding: 10px 14px;
+        font-size: 14px;
+      }
+    }
+
+    .message-input-container {
+      padding: var(--teams-spacing-md);
+      
+      .input-wrapper {
+        gap: var(--teams-spacing-sm);
+        
+        .message-input {
+          .mat-mdc-input-element {
+            font-size: 14px;
+            padding: 12px;
+          }
+        }
+        
+        .send-button {
+          height: 48px;
+          min-width: 60px;
+          padding: 0 12px;
+          
+          span {
+            display: none; // Cacher le texte, garder que l'icône
+          }
+        }
+      }
     }
   }
 }
 
+// Mobiles (jusqu'à 480px)
 @media (max-width: 480px) {
-  .chat-content .conversations-sidebar {
-    width: 100%;
-    position: fixed;
-    z-index: 5;
+  .chat-container {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .chat-toolbar {
+    height: 56px;
+    padding: 0 4px;
+    
+    span:first-of-type {
+      font-size: 14px;
+      margin-left: 4px;
+    }
+    
+    .user-avatar-trigger {
+      margin-right: 4px !important;
+      
+      .user-avatar-container .avatar-initials {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 12px !important;
+      }
+      
+      .user-status-indicator {
+        width: 10px !important;
+        height: 10px !important;
+      }
+    }
+  }
+
+  .chat-content {
+    height: calc(100vh - 56px);
+    
+    .conversations-sidebar {
+      width: 100%;
+      
+      .sidebar-header {
+        padding: 12px;
+        
+        h3 {
+          font-size: 16px;
+        }
+      }
+      
+      .conversations-list {
+        .conversation-item {
+          padding: 12px;
+          
+          .conversation-avatar {
+            width: 40px;
+            height: 40px;
+            
+            .avatar-initials {
+              font-size: 14px;
+            }
+          }
+          
+          .conversation-content {
+            .conversation-name {
+              font-size: 14px;
+            }
+            
+            .last-message {
+              font-size: 12px;
+            }
+            
+            .last-activity {
+              font-size: 10px;
+            }
+          }
+        }
+      }
+    }
   }
 
   .chat-main {
-    .messages-container .message .message-bubble {
-      max-width: 90%;
+    .chat-header {
+      padding: 12px 16px;
+      
+      .conversation-details h4 {
+        font-size: 16px;
+      }
+    }
+    
+    .messages-container {
+      padding: 8px;
+      
+      .message {
+        margin-bottom: 12px;
+        
+        .message-bubble {
+          max-width: 95%;
+          padding: 8px 12px;
+          font-size: 14px;
+          
+          .message-content {
+            margin-bottom: 4px;
+          }
+          
+          .message-footer {
+            .message-time {
+              font-size: 10px;
+            }
+            
+            .read-indicators {
+              .read-icon, .delivered-icon {
+                font-size: 12px !important;
+                width: 12px !important;
+                height: 12px !important;
+              }
+            }
+          }
+        }
+      }
     }
     
     .message-input-container {
-      padding: var(--teams-spacing-md) var(--teams-spacing-lg);
-
+      padding: 8px 12px;
+      
       .input-wrapper {
         flex-direction: column;
-        gap: var(--teams-spacing-sm);
-        align-items: stretch;
-
+        gap: 8px;
+        
+        .message-input {
+          .mat-mdc-input-element {
+            font-size: 14px;
+            padding: 10px;
+            max-height: 80px;
+          }
+        }
+        
         .send-button {
-          height: 48px;
-          min-width: 100%;
-          justify-content: center;
+          height: 44px;
+          width: 100%;
+          border-radius: 8px;
+          
+          span {
+            display: inline; // Réafficher le texte sur mobile
+            font-size: 14px;
+          }
+          
+          mat-icon {
+            margin-right: 8px;
+          }
         }
       }
+    }
+    
+    .no-conversation-selected {
+      padding: 20px;
+      
+      mat-icon {
+        font-size: 64px !important;
+        height: 64px !important;
+        width: 64px !important;
+      }
+      
+      h3, p {
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+// Très petits mobiles (max 360px)
+@media (max-width: 360px) {
+  .chat-toolbar {
+    span:first-of-type {
+      font-size: 12px;
+    }
+  }
+  
+  .chat-main {
+    .messages-container .message .message-bubble {
+      max-width: 98%;
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+    
+    .message-input-container {
+      padding: 6px 8px;
     }
   }
 }
@@ -759,7 +1091,7 @@
   .search-results {
     max-height: 300px;
     overflow-y: auto;
-    @include teams-scrollbar;
+    @include teams-theme.teams-scrollbar;
     
     .user-result {
       display: flex;

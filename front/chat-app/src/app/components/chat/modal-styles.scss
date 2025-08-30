@@ -2,7 +2,7 @@
 // MODAL DES DEMANDES EN ATTENTE - US022
 // ================================================
 
-@import '../../../styles/teams-theme';
+@use '../../../styles/teams-theme';
 
 .pending-modal-overlay {
   position: fixed;
@@ -47,7 +47,7 @@
     .modal-content {
       flex: 1;
       overflow-y: auto;
-      @include teams-scrollbar;
+      @include teams-theme.teams-scrollbar;
       
       .pending-conversation-item {
         display: flex;

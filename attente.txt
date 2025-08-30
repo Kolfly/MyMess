@@ -42,14 +42,14 @@
 
   ⚙️ Profil et paramètres :
 
-  US013 - Mon profil
+ // US013 - Mon profil
   En tant qu'utilisateur, je veux voir et modifier mon profil (nom d'affichage, statut).
 
-  US014 - Statut en ligne
+  //US014 - Statut en ligne
   En tant qu'utilisateur, je veux voir qui est en ligne et changer mon propre statut (en ligne/absent/occupé).
 
-  US015 - Déconnexion
-  En tant qu'utilisateur connecté, je veux pouvoir me déconnecter proprement.
+//  US015 - Déconnexion
+  En tant qu'utilisateur connecté, je veux pouvoir me déconnecter proprement. et que cela me passe forcement en statut absent 
 
   ---
   🎨 INTERFACE SUGGÉRÉE :
@@ -71,5 +71,5 @@
   ├───────────────────┼─────────────────────────────────────────┤
   │ [🔍] Rechercher   │ [Tapez votre message...]          [📤] │
   └───────────────────┴─────────────────────────────────────────┘
-
+US026 - rendre le site mobile friendly peux importe la taille d'ecran 
   

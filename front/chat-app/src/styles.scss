@@ -6,7 +6,7 @@
 @use '@angular/material' as mat;
 
 // Import du thème Teams
-@import './styles/teams-theme';
+@use './styles/teams-theme';
 
 // Définir un thème Material personnalisé Teams Dark
 $teams-primary: mat.m2-define-palette((
@@ -150,6 +150,24 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
+  
+  // Améliorations tactiles pour mobile (US026)
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  
+  // Permettre la sélection sur les champs de texte et contenus de messages
+  input, textarea, [contenteditable], .message-content {
+    -webkit-user-select: text;
+    -khtml-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
 }
 
 // ================================================
@@ -158,7 +176,7 @@ body {
 
 // Cards
 .mat-mdc-card {
-  @include teams-card;
+  @include teams-theme.teams-card;
   
   .mat-mdc-card-header {
     background: transparent;
@@ -183,7 +201,7 @@ body {
 }
 
 .mat-mdc-raised-button.mat-primary {
-  @include teams-button-primary;
+  @include teams-theme.teams-button-primary;
 }
 
 .mat-mdc-button.mat-primary {
@@ -349,7 +367,7 @@ body {
 // ================================================
 
 * {
-  @include teams-scrollbar;
+  @include teams-theme.teams-scrollbar;
 }
 
 // ================================================
@@ -396,4 +414,47 @@ body {
 
 .no-select {
   user-select: none !important;
+}
+
+// ================================================
+// AMÉLIORATIONS MOBILES (US026)
+// ================================================
+
+// Améliorations tactiles pour les boutons
+@media (max-width: 768px) {
+  .mat-mdc-button, .mat-mdc-raised-button, .mat-mdc-icon-button {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    
+    &:focus {
+      outline: 2px solid var(--teams-primary);
+      outline-offset: 2px;
+    }
+  }
+  
+  .mat-mdc-form-field {
+    .mat-mdc-input-element {
+      font-size: 16px !important; // Éviter le zoom automatique sur iOS
+    }
+  }
+  
+  // Améliorer les zones tactiles des menus
+  .mat-mdc-menu-item {
+    min-height: 48px !important;
+    padding: 12px 16px !important;
+    
+    &:active {
+      background: var(--teams-surface-selected) !important;
+    }
+  }
+  
+  // Messages tactiles plus grands
+  .message-bubble {
+    min-height: 40px;
+    
+    &:active {
+      transform: scale(0.98);
+      transition: transform 0.1s ease;
+    }
+  }
 }

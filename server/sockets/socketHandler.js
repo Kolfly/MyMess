@@ -771,6 +771,29 @@ class SocketHandler {
       });
     }
   }
+
+  // ================================================
+  // DIFFUSION DU CHANGEMENT DE STATUT UTILISATEUR
+  // ================================================
+
+  broadcastUserStatusChange(userId, newStatus, displayName) {
+    try {
+      console.log(`📡 Diffusion changement de statut: ${displayName} (${userId}) -> ${newStatus}`);
+
+      // Diffuser à tous les utilisateurs connectés (sauf celui qui change)
+      this.io.emit('user:statusChanged', {
+        userId,
+        status: newStatus,
+        displayName: displayName || 'Utilisateur',
+        timestamp: new Date().toISOString()
+      });
+
+      console.log(`✅ Changement de statut diffusé pour ${displayName}`);
+      
+    } catch (error) {
+      console.error('❌ Erreur broadcastUserStatusChange:', error);
+    }
+  }
 }
 
 module.exports = SocketHandler;

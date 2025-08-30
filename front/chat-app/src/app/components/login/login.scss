@@ -2,7 +2,7 @@
 // LOGIN COMPONENT - TEAMS DARK THEME
 // ================================================
 
-@import '../../../styles/teams-theme';
+@use '../../../styles/teams-theme';
 
 .login-container {
   min-height: 100vh;
@@ -36,7 +36,7 @@
   }
 
   .login-card {
-    @include teams-card;
+    @include teams-theme.teams-card;
     border-radius: var(--teams-radius-lg);
     box-shadow: var(--teams-shadow-xl);
     overflow: hidden;
@@ -174,7 +174,7 @@
 
         // Bouton de connexion
         .login-button {
-          @include teams-button-primary;
+          @include teams-theme.teams-button-primary;
           height: 48px;
           font-size: var(--teams-font-size-base);
           font-weight: var(--teams-font-weight-semibold);
@@ -244,7 +244,7 @@
         gap: var(--teams-spacing-xs);
 
         button {
-          @include teams-button-secondary;
+          @include teams-theme.teams-button-secondary;
           padding: var(--teams-spacing-xs) var(--teams-spacing-sm);
           min-width: auto;
           font-size: var(--teams-font-size-sm);
@@ -357,7 +357,54 @@
 
 @media (max-width: 360px) {
   .login-container {
-    padding: var(--teams-spacing-md);
+    padding: var(--teams-spacing-sm);
+    min-height: 100vh;
+    align-items: flex-start;
+    padding-top: 20px;
+
+    .login-card {
+      mat-card-header {
+        padding: var(--teams-spacing-lg);
+        
+        .title-wrapper .chat-icon {
+          font-size: 24px;
+          width: 24px;
+          height: 24px;
+        }
+        
+        mat-card-title {
+          font-size: var(--teams-font-size-base);
+        }
+        
+        mat-card-subtitle {
+          font-size: var(--teams-font-size-xs);
+        }
+      }
+      
+      mat-card-content {
+        padding: var(--teams-spacing-lg);
+        
+        .login-form {
+          gap: var(--teams-spacing-md);
+          
+          .login-button {
+            height: 44px;
+            font-size: var(--teams-font-size-sm);
+          }
+        }
+      }
+      
+      .card-actions {
+        padding: var(--teams-spacing-sm) var(--teams-spacing-lg);
+        
+        .register-text {
+          font-size: var(--teams-font-size-xs);
+          flex-direction: column;
+          text-align: center;
+          gap: var(--teams-spacing-xs);
+        }
+      }
+    }
   }
 }
 

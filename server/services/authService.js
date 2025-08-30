@@ -360,21 +360,46 @@ class AuthenticationService {
         throw new Error('Utilisateur introuvable ou compte désactivé');
       }
 
-      const { firstName, lastName, username } = updateData;
+      const { firstName, lastName, username, displayName, status } = updateData;
 
       // Si le username change, vérifier qu'il n'est pas déjà pris
       if (username && username !== user.username) {
         await this.validateUniqueCredentials(user.email, username, userId);
       }
 
-      // Mettre à jour les champs autorisés
-      const updatedUser = await user.update({
+      // Préparer les données de mise à jour
+      const updateFields = {
         firstName: firstName !== undefined ? (firstName ? firstName.trim() : null) : user.firstName,
         lastName: lastName !== undefined ? (lastName ? lastName.trim() : null) : user.lastName,
         username: username ? username.trim() : user.username
-      });
+      };
+
+      // Ajouter displayName si fourni
+      if (displayName !== undefined) {
+        updateFields.displayName = displayName ? displayName.trim() : null;
+      }
+
+      // Ajouter status si fourni et valide
+      if (status !== undefined) {
+        const validStatuses = ['online', 'offline', 'away', 'busy'];
+        if (validStatuses.includes(status)) {
+          updateFields.status = status;
+          console.log('🔄 Changement de statut vers:', status, 'pour utilisateur:', userId);
+        } else {
+          console.warn('⚠️ Statut invalide ignoré:', status);
+        }
+      }
+
+      // Mettre à jour les champs autorisés
+      const updatedUser = await user.update(updateFields);
 
       console.log('✅ Profil mis à jour pour utilisateur:', userId);
+
+      // Si le statut a changé, notifier via WebSocket
+      if (status !== undefined && global.socketHandler) {
+        console.log('📡 Diffusion du changement de statut via WebSocket');
+        global.socketHandler.broadcastUserStatusChange(userId, status, updatedUser.displayName || updatedUser.username);
+      }
 
       return {
         success: true,
