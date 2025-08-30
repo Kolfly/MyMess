@@ -162,6 +162,5 @@ MessageRead.getUnreadMessagesInConversation = async function(conversationId, use
   return messages.filter(m => !readMessageIds.includes(m.id));
 };
 
-console.log('✅ Modèle MessageRead défini');
 
 module.exports = MessageRead;

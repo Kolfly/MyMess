@@ -279,6 +279,5 @@ Conversation.findPrivateConversation = async function(user1Id, user2Id) {
   return null;
 };
 
-console.log('✅ Modèle Conversation défini');
 
 module.exports = Conversation;

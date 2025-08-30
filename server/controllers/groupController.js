@@ -8,7 +8,6 @@ class GroupController {
   // 👤 AJOUTER DES MEMBRES À UN GROUPE
   async addMembers(req, res) {
     try {
-      console.log(`👤 [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { conversationId } = req.params;
       const { memberIds } = req.body;
@@ -36,7 +35,6 @@ class GroupController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur addMembers:', error.message);
       
       const statusCode = error.message.includes('permissions') ? 403 : 400;
 
@@ -52,7 +50,6 @@ class GroupController {
   // ❌ SUPPRIMER UN MEMBRE D'UN GROUPE
   async removeMember(req, res) {
     try {
-      console.log(`❌ [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { conversationId, memberId } = req.params;
 
@@ -70,7 +67,6 @@ class GroupController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur removeMember:', error.message);
       
       const statusCode = error.message.includes('permissions') ? 403 : 400;
 
@@ -86,7 +82,6 @@ class GroupController {
   // ⚙️ MODIFIER LES PARAMÈTRES D'UN GROUPE
   async updateSettings(req, res) {
     try {
-      console.log(`⚙️ [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { conversationId } = req.params;
       const { name, description } = req.body;
@@ -105,7 +100,6 @@ class GroupController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur updateSettings:', error.message);
       
       const statusCode = error.message.includes('permissions') ? 403 : 400;
 
@@ -121,7 +115,6 @@ class GroupController {
   // 👑 MODIFIER LE RÔLE D'UN MEMBRE
   async updateMemberRole(req, res) {
     try {
-      console.log(`👑 [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { conversationId, memberId } = req.params;
       const { role } = req.body;
@@ -141,7 +134,6 @@ class GroupController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur updateMemberRole:', error.message);
       
       const statusCode = error.message.includes('propriétaire') ? 403 : 400;
 
@@ -157,7 +149,6 @@ class GroupController {
   // 📋 OBTENIR LES DÉTAILS D'UN GROUPE
   async getDetails(req, res) {
     try {
-      console.log(`📋 [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { conversationId } = req.params;
 
@@ -174,7 +165,6 @@ class GroupController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur getDetails:', error.message);
       
       const statusCode = error.message.includes('membre') ? 403 : 400;
 
@@ -190,7 +180,6 @@ class GroupController {
   // 🚪 QUITTER UN GROUPE (US025)
   async leaveGroup(req, res) {
     try {
-      console.log(`🚪 [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { conversationId } = req.params;
 
@@ -204,7 +193,6 @@ class GroupController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur leaveGroup:', error.message);
       
       const statusCode = error.message.includes('non trouvé') ? 404 :
                         error.message.includes('membre') ? 403 : 500;
@@ -219,6 +207,5 @@ class GroupController {
   }
 }
 
-console.log('✅ GroupController créé');
 
 module.exports = new GroupController();

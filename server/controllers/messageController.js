@@ -14,7 +14,6 @@ class MessageController {
   // 📋 RÉCUPÉRER TOUTES LES CONVERSATIONS DE L'UTILISATEUR
   async getUserConversations(req, res) {
     try {
-      console.log(`📋 [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { limit, offset, includeArchived } = req.query;
       
@@ -32,7 +31,6 @@ class MessageController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur getUserConversations:', error.message);
       res.status(500).json({
         success: false,
         message: error.message,
@@ -45,7 +43,6 @@ class MessageController {
   // 💬 CRÉER UNE CONVERSATION PRIVÉE
   async createPrivateConversation(req, res) {
     try {
-      console.log(`💬 [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { otherUserId } = req.body;
 
@@ -83,11 +80,9 @@ class MessageController {
                 },
                 timestamp: new Date().toISOString()
               });
-              console.log(`📨 Demande de conversation envoyée à ${otherUserId} (socket: ${socketId})`);
             }
           }
         } else {
-          console.log(`📭 Utilisateur ${otherUserId} non connecté - demande en attente`);
         }
       }
 
@@ -99,7 +94,6 @@ class MessageController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur createPrivateConversation:', error.message);
       res.status(400).json({
         success: false,
         message: error.message,
@@ -112,7 +106,6 @@ class MessageController {
   // 👥 CRÉER UNE CONVERSATION GROUPE
   async createGroupConversation(req, res) {
     try {
-      console.log(`👥 [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { name, description, memberIds } = req.body;
 
@@ -131,7 +124,6 @@ class MessageController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur createGroupConversation:', error.message);
       res.status(400).json({
         success: false,
         message: error.message,
@@ -144,7 +136,6 @@ class MessageController {
   // 📄 RÉCUPÉRER LES DÉTAILS D'UNE CONVERSATION
   async getConversationDetails(req, res) {
     try {
-      console.log(`📄 [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { conversationId } = req.params;
 
@@ -161,7 +152,6 @@ class MessageController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur getConversationDetails:', error.message);
       
       const statusCode = error.message.includes('non trouvée') ? 404 :
                         error.message.includes('non autorisé') ? 403 : 500;
@@ -182,7 +172,6 @@ class MessageController {
   // 📝 ENVOYER UN MESSAGE
   async sendMessage(req, res) {
     try {
-      console.log(`📝 [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { content, conversationId, messageType, replyToId, metadata } = req.body;
 
@@ -201,7 +190,6 @@ class MessageController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur sendMessage:', error.message);
       
       const statusCode = error.message.includes('non trouvée') ? 404 :
                         error.message.includes('pas membre') ? 403 : 400;
@@ -218,7 +206,6 @@ class MessageController {
   // 📋 RÉCUPÉRER LES MESSAGES D'UNE CONVERSATION
   async getConversationMessages(req, res) {
     try {
-      console.log(`📋 [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { conversationId } = req.params;
       const { limit, offset, before, after } = req.query;
@@ -237,7 +224,6 @@ class MessageController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur getConversationMessages:', error.message);
       
       const statusCode = error.message.includes('non trouvée') ? 404 :
                         error.message.includes('non autorisé') ? 403 : 500;
@@ -254,7 +240,6 @@ class MessageController {
   // ✏️ MODIFIER UN MESSAGE
   async editMessage(req, res) {
     try {
-      console.log(`✏️ [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { messageId } = req.params;
       const { content } = req.body;
@@ -273,7 +258,6 @@ class MessageController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur editMessage:', error.message);
       
       const statusCode = error.message.includes('non trouvé') ? 404 :
                         error.message.includes('pas modifier') ? 403 :
@@ -291,7 +275,6 @@ class MessageController {
   // 🗑️ SUPPRIMER UN MESSAGE
   async deleteMessage(req, res) {
     try {
-      console.log(`🗑️ [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { messageId } = req.params;
 
@@ -304,7 +287,6 @@ class MessageController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur deleteMessage:', error.message);
       
       const statusCode = error.message.includes('non trouvé') ? 404 :
                         error.message.includes('pas supprimer') ? 403 : 400;
@@ -321,7 +303,6 @@ class MessageController {
   // 📖 MARQUER LES MESSAGES COMME LUS
   async markAsRead(req, res) {
     try {
-      console.log(`📖 [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { conversationId } = req.params;
       const { messageId } = req.body;
@@ -335,7 +316,6 @@ class MessageController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur markAsRead:', error.message);
       
       const statusCode = error.message.includes('pas membre') ? 403 : 400;
 
@@ -355,7 +335,6 @@ class MessageController {
   // 🔍 RECHERCHER DANS LES MESSAGES (PLACEHOLDER)
   async searchMessages(req, res) {
     try {
-      console.log(`🔍 [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       // TODO: Implémenter la recherche full-text dans les messages
       res.status(501).json({
@@ -366,7 +345,6 @@ class MessageController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur searchMessages:', error.message);
       res.status(500).json({
         success: false,
         message: 'Erreur lors de la recherche',
@@ -379,7 +357,6 @@ class MessageController {
   // 📊 STATISTIQUES DES MESSAGES
   async getMessageStats(req, res) {
     try {
-      console.log(`📊 [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       // TODO: Implémenter les statistiques des messages
       res.status(200).json({
@@ -395,7 +372,6 @@ class MessageController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur getMessageStats:', error.message);
       res.status(500).json({
         success: false,
         message: 'Erreur lors de la récupération des statistiques',
@@ -412,7 +388,6 @@ class MessageController {
   // 📋 RÉCUPÉRER LES DEMANDES EN ATTENTE
   async getPendingConversations(req, res) {
     try {
-      console.log(`📋 [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const result = await messageService.getPendingConversations(req.user.id);
 
@@ -424,7 +399,6 @@ class MessageController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur getPendingConversations:', error.message);
       res.status(500).json({
         success: false,
         message: error.message,
@@ -441,7 +415,6 @@ class MessageController {
   // 👁️ MARQUER UN MESSAGE COMME LU
   async markMessageAsRead(req, res) {
     try {
-      console.log(`👁️ [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { messageId } = req.params;
 
@@ -455,7 +428,6 @@ class MessageController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur markMessageAsRead:', error.message);
       
       const statusCode = error.message.includes('non trouvé') ? 404 :
                         error.message.includes('non autorisé') ? 403 : 400;
@@ -472,7 +444,6 @@ class MessageController {
   // 👁️ MARQUER UNE CONVERSATION COMME LUE
   async markConversationAsRead(req, res) {
     try {
-      console.log(`👁️ [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { conversationId } = req.params;
       const { lastMessageId } = req.body;
@@ -491,7 +462,6 @@ class MessageController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur markConversationAsRead:', error.message);
       
       const statusCode = error.message.includes('non trouvée') ? 404 :
                         error.message.includes('non autorisé') ? 403 : 400;
@@ -508,7 +478,6 @@ class MessageController {
   // 📊 OBTENIR LES STATUTS DE LECTURE
   async getReadStatuses(req, res) {
     try {
-      console.log(`📊 [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { messageIds } = req.body;
 
@@ -531,7 +500,6 @@ class MessageController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur getReadStatuses:', error.message);
       res.status(500).json({
         success: false,
         message: error.message,
@@ -544,7 +512,6 @@ class MessageController {
   // 👥 OBTENIR LES LECTEURS D'UN MESSAGE
   async getMessageReaders(req, res) {
     try {
-      console.log(`👥 [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { messageId } = req.params;
 
@@ -558,7 +525,6 @@ class MessageController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur getMessageReaders:', error.message);
       res.status(500).json({
         success: false,
         message: error.message,
@@ -571,7 +537,6 @@ class MessageController {
   // 📋 OBTENIR LES MESSAGES NON LUS
   async getUnreadMessages(req, res) {
     try {
-      console.log(`📋 [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { conversationId } = req.params;
 
@@ -585,7 +550,6 @@ class MessageController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur getUnreadMessages:', error.message);
       res.status(500).json({
         success: false,
         message: error.message,
@@ -598,7 +562,6 @@ class MessageController {
   // ✅ ACCEPTER UNE CONVERSATION
   async acceptConversation(req, res) {
     try {
-      console.log(`✅ [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { conversationId } = req.params;
 
@@ -615,7 +578,6 @@ class MessageController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur acceptConversation:', error.message);
       
       const statusCode = error.message.includes('non trouvée') ? 404 :
                         error.message.includes('pas membre') ? 403 :
@@ -633,7 +595,6 @@ class MessageController {
   // ❌ REFUSER UNE CONVERSATION
   async rejectConversation(req, res) {
     try {
-      console.log(`❌ [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { conversationId } = req.params;
 
@@ -649,7 +610,6 @@ class MessageController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur rejectConversation:', error.message);
       
       const statusCode = error.message.includes('non trouvée') ? 404 :
                         error.message.includes('pas membre') ? 403 :
@@ -701,7 +661,6 @@ class MessageController {
   // 🗑️ SUPPRIMER UNE CONVERSATION
   async deleteConversation(req, res) {
     try {
-      console.log(`🗑️ [${req.method}] ${req.originalUrl} - Utilisateur: ${req.user.id}`);
 
       const { conversationId } = req.params;
 
@@ -715,7 +674,6 @@ class MessageController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur deleteConversation:', error.message);
       
       const statusCode = error.message.includes('non trouvée') ? 404 :
                         error.message.includes('non autorisé') ? 403 : 500;
@@ -730,6 +688,5 @@ class MessageController {
   }
 }
 
-console.log('✅ MessageController créé');
 
 module.exports = new MessageController();

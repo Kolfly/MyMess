@@ -91,7 +91,6 @@ const authMiddleware = async (req, res, next) => {
     // Étape 5: Mettre à jour l'activité de l'utilisateur
     // On fait ça de manière asynchrone pour ne pas ralentir la requête
     user.update({ lastSeen: new Date() }).catch(error => {
-      console.warn('Erreur mise à jour lastSeen:', error.message);
     });
 
     // Étape 6: Ajouter l'utilisateur et les infos du token à l'objet request
@@ -105,7 +104,6 @@ const authMiddleware = async (req, res, next) => {
 
   } catch (error) {
     // Gestion des erreurs inattendues (problèmes de base de données, etc.)
-    console.error('Erreur dans authMiddleware:', error);
     
     return res.status(500).json({ 
       success: false, 
@@ -172,7 +170,6 @@ const optionalAuthMiddleware = async (req, res, next) => {
 
   } catch (error) {
     // Même en cas d'erreur, on continue sans utilisateur
-    console.warn('Erreur dans optionalAuthMiddleware:', error.message);
     req.user = null;
     req.userId = null;
     next();
@@ -262,7 +259,6 @@ const requireOwnership = (resourceIdParam = 'id', userIdField = 'userId') => {
 // Utile pour tracer les actions des utilisateurs (audit trail)
 const logAuthenticatedRequests = (req, res, next) => {
   if (req.user) {
-    console.log(`🔐 ${new Date().toISOString()} - User ${req.user.username} (${req.user.id}) - ${req.method} ${req.originalUrl}`);
   }
   next();
 };

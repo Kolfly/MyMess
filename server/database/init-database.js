@@ -6,26 +6,21 @@ const sequelize = require('./config/database');
 
 async function initializeDatabase(forceReset = false) {
   try {
-    console.log('🔄 Initialisation manuelle de la base de données...');
     
     // Test de connexion
     await sequelize.authenticate();
-    console.log('✅ Connexion PostgreSQL établie');
     
     // Vérifier si l'utilisateur veut forcer la suppression des données
     const shouldForceReset = forceReset || process.env.FORCE_DB_RESET === 'true';
     
     if (shouldForceReset) {
-      console.log('⚠️  FORCE_DB_RESET activé - Suppression de toutes les données...');
       // Supprimer toutes les tables existantes et leurs contraintes
       await sequelize.query('DROP SCHEMA public CASCADE;');
       await sequelize.query('CREATE SCHEMA public;');
       await sequelize.query('GRANT ALL ON SCHEMA public TO postgres;');
       await sequelize.query('GRANT ALL ON SCHEMA public TO public;');
       
-      console.log('✅ Schéma nettoyé');
     } else {
-      console.log('🔒 Mode sécurisé - Préservation des données existantes');
     }
     
     // Créer les enums d'abord
@@ -49,7 +44,6 @@ async function initializeDatabase(forceReset = false) {
       CREATE TYPE enum_conversation_members_role AS ENUM ('member', 'admin', 'owner');
     `);
     
-    console.log('✅ Types ENUM créés');
     
     // Créer la table users
     await sequelize.query(`
@@ -75,7 +69,6 @@ async function initializeDatabase(forceReset = false) {
       );
     `);
     
-    console.log('✅ Table users créée');
     
     // Créer la table conversations
     await sequelize.query(`
@@ -97,7 +90,6 @@ async function initializeDatabase(forceReset = false) {
       );
     `);
     
-    console.log('✅ Table conversations créée');
     
     // Créer la table messages
     await sequelize.query(`
@@ -117,7 +109,6 @@ async function initializeDatabase(forceReset = false) {
       );
     `);
     
-    console.log('✅ Table messages créée');
     
     // Créer la table conversation_members
     await sequelize.query(`
@@ -142,7 +133,6 @@ async function initializeDatabase(forceReset = false) {
       );
     `);
     
-    console.log('✅ Table conversation_members créée');
     
     // Ajouter la référence last_message_id maintenant que messages existe
     await sequelize.query(`
@@ -151,7 +141,6 @@ async function initializeDatabase(forceReset = false) {
       FOREIGN KEY (last_message_id) REFERENCES messages(id) ON DELETE SET NULL;
     `);
     
-    console.log('✅ Contrainte last_message_id ajoutée');
     
     // Créer les index pour les performances
     await sequelize.query(`
@@ -173,12 +162,9 @@ async function initializeDatabase(forceReset = false) {
       CREATE INDEX idx_conversation_members_role ON conversation_members(role);
     `);
     
-    console.log('✅ Index créés');
     
-    console.log('🎉 Base de données initialisée avec succès !');
     
   } catch (error) {
-    console.error('❌ Erreur lors de l\'initialisation:', error.message);
     throw error;
   }
 }
@@ -186,14 +172,11 @@ async function initializeDatabase(forceReset = false) {
 // Fonction sécurisée qui ne crée que les éléments manquants
 async function safeInitializeDatabase() {
   try {
-    console.log('🔄 Initialisation sécurisée de la base de données...');
     
     // Test de connexion
     await sequelize.authenticate();
-    console.log('✅ Connexion PostgreSQL établie');
     
     // Créer les ENUMs s'ils n'existent pas
-    console.log('🔍 Vérification des ENUMs...');
     
     const enumQueries = [
       `CREATE TYPE IF NOT EXISTS enum_users_status AS ENUM ('online', 'offline', 'away', 'busy', 'invisible');`,
@@ -207,15 +190,12 @@ async function safeInitializeDatabase() {
         await sequelize.query(query);
       } catch (error) {
         if (!error.message.includes('already exists')) {
-          console.log(`⚠️  Erreur création ENUM: ${error.message}`);
         }
       }
     }
     
-    console.log('✅ ENUMs vérifiés/créés');
     
     // Créer les tables une par une avec CREATE IF NOT EXISTS
-    console.log('🔍 Vérification des tables...');
     
     // Table users
     await sequelize.query(`
@@ -295,10 +275,8 @@ async function safeInitializeDatabase() {
       );
     `);
     
-    console.log('✅ Tables vérifiées/créées');
     
     // Ajouter les contraintes de clés étrangères si elles n'existent pas
-    console.log('🔍 Vérification des contraintes...');
     
     const constraints = [
       `ALTER TABLE conversations ADD CONSTRAINT IF NOT EXISTS fk_conversations_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE;`,
@@ -317,15 +295,12 @@ async function safeInitializeDatabase() {
         await sequelize.query(constraint);
       } catch (error) {
         if (!error.message.includes('already exists')) {
-          console.log(`⚠️  Erreur contrainte: ${error.message}`);
         }
       }
     }
     
-    console.log('✅ Contraintes vérifiées/créées');
     
     // Créer les index pour les performances
-    console.log('🔍 Vérification des index...');
     
     const indexes = [
       `CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);`,
@@ -344,16 +319,12 @@ async function safeInitializeDatabase() {
         await sequelize.query(index);
       } catch (error) {
         if (!error.message.includes('already exists')) {
-          console.log(`⚠️  Erreur index: ${error.message}`);
         }
       }
     }
     
-    console.log('✅ Index vérifiés/créés');
-    console.log('🎉 Base de données initialisée de manière sécurisée !');
     
   } catch (error) {
-    console.error('❌ Erreur lors de l\'initialisation sécurisée:', error);
     throw error;
   }
 }

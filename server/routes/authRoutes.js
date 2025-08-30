@@ -176,7 +176,6 @@ router.get('/search',
         timestamp: new Date().toISOString()
       });
     } catch (error) {
-      console.error('Erreur recherche utilisateurs:', error);
       res.status(500).json({
         success: false,
         message: 'Erreur lors de la recherche d\'utilisateurs',
@@ -214,7 +213,6 @@ router.get('/global-stats',
         });
       }
     } catch (error) {
-      console.error('Erreur statistiques globales:', error);
       res.status(500).json({
         success: false,
         message: 'Erreur lors de la récupération des statistiques',
@@ -277,7 +275,6 @@ router.use((req, res, next) => {
     userId: req.user ? req.user.id : 'anonymous'
   };
   
-  console.log('🔐 Auth Route Access:', JSON.stringify(logData));
   next();
 });
 

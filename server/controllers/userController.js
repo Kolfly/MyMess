@@ -19,7 +19,6 @@ class UserController {
         });
       }
 
-      console.log('🔄 Récupération du profil utilisateur:', userId);
 
       const user = await authService.getUserFromToken(req.headers.authorization?.split(' ')[1]);
       
@@ -39,7 +38,6 @@ class UserController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur récupération profil:', error.message);
       
       return res.status(500).json({
         success: false,
@@ -63,7 +61,6 @@ class UserController {
       const userId = req.user.id;
       const { firstName, lastName, username, avatar } = req.body;
 
-      console.log('🔄 Mise à jour du profil utilisateur:', userId);
 
       // Mettre à jour via le service
       const result = await authService.updateUserProfile(userId, {
@@ -82,7 +79,6 @@ class UserController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur mise à jour profil:', error.message);
       
       if (error.message.includes('déjà pris') || error.message.includes('déjà utilisé')) {
         return res.status(409).json({
@@ -113,7 +109,6 @@ class UserController {
       const userId = req.user.id;
       const { status } = req.body;
 
-      console.log('🔄 Mise à jour du statut utilisateur:', userId, '→', status);
 
       // Mettre à jour via le service
       const result = await authService.updateUserStatus(userId, status);
@@ -127,7 +122,6 @@ class UserController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur mise à jour statut:', error.message);
       
       return res.status(400).json({
         success: false,
@@ -162,7 +156,6 @@ class UserController {
         });
       }
 
-      console.log('🔄 Recherche d\'utilisateurs:', query, 'par utilisateur:', currentUserId);
 
       // Rechercher via le service
       const result = await authService.searchUsers(query.trim(), currentUserId, parseInt(limit));
@@ -178,7 +171,6 @@ class UserController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur recherche utilisateurs:', error.message);
       
       return res.status(500).json({
         success: false,
@@ -192,7 +184,6 @@ class UserController {
     try {
       const { limit = 50 } = req.query;
       
-      console.log('🔄 Récupération des utilisateurs en ligne');
 
       // Utiliser les méthodes statiques du modèle User
       const User = require('../models/User');
@@ -212,7 +203,6 @@ class UserController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur récupération utilisateurs en ligne:', error.message);
       
       return res.status(500).json({
         success: false,
@@ -224,7 +214,6 @@ class UserController {
   // 📊 STATISTIQUES UTILISATEURS
   async getUserStatistics(req, res) {
     try {
-      console.log('🔄 Récupération des statistiques utilisateurs');
 
       // Récupérer les statistiques via le service
       const stats = await authService.getUserStatistics();
@@ -238,7 +227,6 @@ class UserController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur récupération statistiques:', error.message);
       
       return res.status(500).json({
         success: false,
@@ -256,7 +244,6 @@ class UserController {
     try {
       const userId = req.user.id;
 
-      console.log('🔄 Mise à jour de la dernière activité pour:', userId);
 
       // Mettre à jour la dernière activité
       const User = require('../models/User');
@@ -280,7 +267,6 @@ class UserController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur mise à jour dernière activité:', error.message);
       
       return res.status(500).json({
         success: false,
@@ -305,7 +291,6 @@ class UserController {
         });
       }
 
-      console.log('🔄 Vérification de la disponibilité du username:', username);
 
       const User = require('../models/User');
       const existingUser = await User.findOne({ 
@@ -327,7 +312,6 @@ class UserController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur vérification username:', error.message);
       
       return res.status(500).json({
         success: false,
@@ -348,7 +332,6 @@ class UserController {
         });
       }
 
-      console.log('🔄 Vérification de la disponibilité de l\'email:', email);
 
       const User = require('../models/User');
       const existingUser = await User.findOne({ 
@@ -370,7 +353,6 @@ class UserController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur vérification email:', error.message);
       
       return res.status(500).json({
         success: false,
@@ -395,7 +377,6 @@ class UserController {
         });
       }
 
-      console.log('🔄 Récupération du profil public pour:', username);
 
       const User = require('../models/User');
       const user = await User.findOne({ 
@@ -422,7 +403,6 @@ class UserController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur récupération profil public:', error.message);
       
       return res.status(500).json({
         success: false,

@@ -9,7 +9,6 @@ class GroupManagementService {
   // 👤 AJOUTER DES MEMBRES À UN GROUPE
   async addMembersToGroup(conversationId, userId, memberIds) {
     try {
-      console.log(`👤 Ajout de membres au groupe ${conversationId} par ${userId}`);
 
       // Vérifier que l'utilisateur est admin du groupe
       const userMember = await ConversationMember.findOne({
@@ -57,11 +56,9 @@ class GroupManagementService {
 
       await ConversationMember.bulkCreate(newMembers);
 
-      console.log(`✅ ${newMemberIds.length} membres ajoutés au groupe ${conversationId}`);
       return { success: true, addedCount: newMemberIds.length };
 
     } catch (error) {
-      console.error('❌ Erreur addMembersToGroup:', error);
       throw new Error(error.message || 'Erreur lors de l\'ajout des membres');
     }
   }
@@ -69,7 +66,6 @@ class GroupManagementService {
   // ❌ SUPPRIMER UN MEMBRE D'UN GROUPE
   async removeMemberFromGroup(conversationId, userId, memberIdToRemove) {
     try {
-      console.log(`❌ Suppression du membre ${memberIdToRemove} du groupe ${conversationId} par ${userId}`);
 
       // Vérifier que l'utilisateur est admin du groupe
       const userMember = await ConversationMember.findOne({
@@ -106,11 +102,9 @@ class GroupManagementService {
       // Marquer le membre comme ayant quitté
       await memberToRemove.update({ leftAt: new Date() });
 
-      console.log(`✅ Membre ${memberIdToRemove} supprimé du groupe ${conversationId}`);
       return { success: true };
 
     } catch (error) {
-      console.error('❌ Erreur removeMemberFromGroup:', error);
       throw new Error(error.message || 'Erreur lors de la suppression du membre');
     }
   }
@@ -118,7 +112,6 @@ class GroupManagementService {
   // ⚙️ MODIFIER LES PARAMÈTRES D'UN GROUPE
   async updateGroupSettings(conversationId, userId, updates) {
     try {
-      console.log(`⚙️ Modification du groupe ${conversationId} par ${userId}`);
 
       // Vérifier que l'utilisateur est admin du groupe
       const userMember = await ConversationMember.findOne({
@@ -156,11 +149,9 @@ class GroupManagementService {
       // Mettre à jour la conversation
       await conversation.update(allowedUpdates);
 
-      console.log(`✅ Groupe ${conversationId} modifié avec succès`);
       return { success: true, updated: allowedUpdates };
 
     } catch (error) {
-      console.error('❌ Erreur updateGroupSettings:', error);
       throw new Error(error.message || 'Erreur lors de la modification du groupe');
     }
   }
@@ -168,7 +159,6 @@ class GroupManagementService {
   // 👑 MODIFIER LE RÔLE D'UN MEMBRE
   async updateMemberRole(conversationId, userId, memberIdToUpdate, newRole) {
     try {
-      console.log(`👑 Modification du rôle de ${memberIdToUpdate} dans ${conversationId} par ${userId}`);
 
       // Vérifier que l'utilisateur est owner du groupe
       const userMember = await ConversationMember.findOne({
@@ -205,11 +195,9 @@ class GroupManagementService {
       // Mettre à jour le rôle
       await memberToUpdate.update({ role: newRole });
 
-      console.log(`✅ Rôle de ${memberIdToUpdate} mis à jour vers ${newRole}`);
       return { success: true, newRole };
 
     } catch (error) {
-      console.error('❌ Erreur updateMemberRole:', error);
       throw new Error(error.message || 'Erreur lors de la modification du rôle');
     }
   }
@@ -217,7 +205,6 @@ class GroupManagementService {
   // 📋 OBTENIR LES DÉTAILS D'UN GROUPE AVEC PERMISSIONS
   async getGroupDetails(conversationId, userId) {
     try {
-      console.log(`📋 Récupération détails du groupe ${conversationId} par ${userId}`);
 
       // Récupérer la conversation avec tous les membres
       const conversation = await Conversation.findByPk(conversationId, {
@@ -284,7 +271,6 @@ class GroupManagementService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur getGroupDetails:', error);
       throw new Error(error.message || 'Erreur lors de la récupération des détails du groupe');
     }
   }
@@ -292,7 +278,6 @@ class GroupManagementService {
   // 🚪 QUITTER UN GROUPE (US025)
   async leaveGroup(conversationId, userId) {
     try {
-      console.log(`🚪 Utilisateur ${userId} quitte le groupe ${conversationId}`);
 
       // Vérifier que la conversation existe et est un groupe
       const conversation = await Conversation.findByPk(conversationId, {
@@ -324,11 +309,9 @@ class GroupManagementService {
           // Transférer la propriété au premier admin, ou au premier membre
           const newOwner = remainingMembers.find(m => m.role === 'admin') || remainingMembers[0];
           await newOwner.update({ role: 'owner' });
-          console.log(`👑 Propriété transférée à ${newOwner.userId}`);
         } else {
           // Si plus de membres, supprimer le groupe complètement
           await conversation.update({ isActive: false });
-          console.log(`🗑️ Groupe ${conversationId} supprimé (plus de membres)`);
         }
       }
 
@@ -341,7 +324,6 @@ class GroupManagementService {
         });
       }
 
-      console.log(`✅ Utilisateur ${userId} a quitté le groupe ${conversationId}`);
       return { 
         success: true, 
         action: 'left',
@@ -349,7 +331,6 @@ class GroupManagementService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur leaveGroup:', error);
       throw new Error(error.message || 'Erreur lors de la sortie du groupe');
     }
   }

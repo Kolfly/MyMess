@@ -303,13 +303,6 @@ class MessageValidator {
         value: error.value
       }));
 
-      console.warn('⚠️ Erreurs de validation messages:', {
-        url: req.originalUrl,
-        method: req.method,
-        errors: formattedErrors,
-        ip: req.ip
-      });
-
       return res.status(400).json({
         success: false,
         message: 'Erreurs de validation des données',
@@ -467,6 +460,5 @@ class MessageValidator {
   }
 }
 
-console.log('✅ MessageValidator créé');
 
 module.exports = new MessageValidator();

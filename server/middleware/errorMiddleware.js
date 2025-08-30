@@ -7,7 +7,6 @@ const notFoundHandler = (req, res, next) => {
   error.statusCode = 404;
   
   // Log de la tentative d'accès à une route inexistante
-  console.warn(`⚠️  Route non trouvée: ${req.method} ${req.originalUrl} - IP: ${req.ip}`);
   
   res.status(404).json({
     success: false,
@@ -50,9 +49,7 @@ const errorHandler = (err, req, res, next) => {
 
   // Log différemment selon la gravité
   if (err.statusCode >= 500 || !err.statusCode) {
-    console.error('💥 ERREUR SERVEUR:', JSON.stringify(errorLog, null, 2));
   } else {
-    console.warn('⚠️  Erreur client:', JSON.stringify(errorLog));
   }
 
   // 🗄️ ERREURS DE BASE DE DONNÉES SEQUELIZE
@@ -231,7 +228,6 @@ const slowQueryLogger = (threshold = 1000) => { // 1 seconde par défaut
     res.on('finish', () => {
       const duration = Date.now() - start;
       if (duration > threshold) {
-        console.warn(`🐌 Requête lente (${duration}ms): ${req.method} ${req.originalUrl}`);
       }
     });
     

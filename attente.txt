@@ -1,22 +1,5 @@
 
 
-  👤 En tant qu'utilisateur non connecté :
-
-  
-
-  
-
-
-
-  💬 En tant qu'utilisateur connecté :
-
-  
-
-  
-
-  
-
- 
 
  // US009 - Statut de lecture
   En tant qu'utilisateur, je veux voir si mes messages ont été lus et marquer les messages reçus comme lus.
@@ -52,7 +35,7 @@
   En tant qu'utilisateur connecté, je veux pouvoir me déconnecter proprement. et que cela me passe forcement en statut absent 
 
   ---
-  🎨 INTERFACE SUGGÉRÉE :
+   INTERFACE SUGGÉRÉE :
 
   ┌─────────────────────────────────────────────────────────────┐
   │  MyMess Chat                                    [👤] [⚙️]   │
@@ -71,5 +54,5 @@
   ├───────────────────┼─────────────────────────────────────────┤
   │ [🔍] Rechercher   │ [Tapez votre message...]          [📤] │
   └───────────────────┴─────────────────────────────────────────┘
-US026 - rendre le site mobile friendly peux importe la taille d'ecran 
+//US026 - rendre le site mobile friendly peux importe la taille d'ecran 
   

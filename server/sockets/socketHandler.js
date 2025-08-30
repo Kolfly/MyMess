@@ -13,8 +13,6 @@ class SocketHandler {
     
     this.setupMiddleware();
     this.setupEventHandlers();
-    
-    console.log('🔌 SocketHandler initialisé');
   }
 
   // ================================================
@@ -26,27 +24,20 @@ class SocketHandler {
       try {
         const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
         
-        console.log('🔐 Tentative d\'authentification WebSocket');
-        console.log('Token reçu:', token ? 'Oui' : 'Non');
-        
         if (!token) {
           return next(new Error('Token d\'authentification requis'));
         }
 
         // Vérifier le token JWT
-        console.log('🔍 Vérification du token JWT...');
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log('✅ Token décodé:', { id: decoded.id, userId: decoded.userId, username: decoded.username });
         
         // Utiliser userId du token (c'est le bon champ)
         const userId = decoded.userId || decoded.id;
-        console.log(`🔍 Recherche utilisateur avec ID: ${userId}`);
         let user = await User.findByPk(userId, {
           attributes: ['id', 'username', 'firstName', 'lastName', 'email', 'status']
         });
 
         if (!user) {
-          console.warn(`⚠️ Utilisateur avec ID ${userId} non trouvé en base. Tentative de création...`);
           
           // Essayer de créer l'utilisateur basé sur les infos du token
           try {
@@ -59,9 +50,7 @@ class SocketHandler {
               lastName: decoded.lastName || null,
               status: 'online'
             });
-            console.log(`✅ Utilisateur créé automatiquement: ${user.username}`);
           } catch (createError) {
-            console.error(`❌ Erreur création utilisateur:`, createError.message);
             return next(new Error('Utilisateur non trouvé et création impossible'));
           }
         }
@@ -70,11 +59,9 @@ class SocketHandler {
         socket.userId = user.id;
         socket.user = user;
         
-        console.log(`✅ Authentification WebSocket réussie: ${user.username} (${socket.id})`);
         next();
 
       } catch (error) {
-        console.error('❌ Erreur authentification WebSocket:', error.message);
         if (error.name === 'JsonWebTokenError') {
           next(new Error('Token JWT invalide'));
         } else if (error.name === 'TokenExpiredError') {
@@ -129,7 +116,6 @@ class SocketHandler {
 
   async handleConnection(socket) {
     try {
-      console.log(`👤 Nouvelle connexion authentifiée: ${socket.user.username} (${socket.id})`);
 
       // Enregistrer la connexion
       this.connectedUsers.set(socket.id, {
@@ -167,14 +153,12 @@ class SocketHandler {
       await this.notifyContactsUserOnline(socket.userId);
 
     } catch (error) {
-      console.error('❌ Erreur handleConnection:', error);
       socket.emit('error', { message: 'Erreur lors de la connexion' });
     }
   }
 
   async handleDisconnection(socket) {
     try {
-      console.log(`👋 Déconnexion: ${socket.user?.username} (${socket.id})`);
 
       // Retirer de la map des connexions
       const userConnection = this.connectedUsers.get(socket.id);
@@ -196,7 +180,6 @@ class SocketHandler {
       }
 
     } catch (error) {
-      console.error('❌ Erreur handleDisconnection:', error);
     }
   }
 
@@ -206,7 +189,6 @@ class SocketHandler {
 
   async handleSendMessage(socket, data) {
     try {
-      console.log(`📝 Nouveau message de ${socket.user.username}:`, data);
 
       const { conversationId, content, messageType, replyToId, metadata } = data;
 
@@ -252,10 +234,8 @@ class SocketHandler {
         timestamp: new Date().toISOString()
       });
 
-      console.log(`✅ Message diffusé dans conversation ${conversationId}`);
 
     } catch (error) {
-      console.error('❌ Erreur handleSendMessage:', error);
       socket.emit('error', { 
         message: error.message || 'Erreur lors de l\'envoi du message',
         tempId: data.tempId 
@@ -277,7 +257,6 @@ class SocketHandler {
       });
 
     } catch (error) {
-      console.error('❌ Erreur handleEditMessage:', error);
       socket.emit('error', { message: error.message });
     }
   }
@@ -296,7 +275,6 @@ class SocketHandler {
       });
 
     } catch (error) {
-      console.error('❌ Erreur handleDeleteMessage:', error);
       socket.emit('error', { message: error.message });
     }
   }
@@ -321,7 +299,6 @@ class SocketHandler {
         userConnection.rooms.add(conversationId);
       }
 
-      console.log(`👥 ${socket.user.username} a rejoint la conversation ${conversationId}`);
       
       // Notifier les autres membres
       socket.to(`conversation:${conversationId}`).emit('user:joined', {
@@ -331,7 +308,6 @@ class SocketHandler {
       });
 
     } catch (error) {
-      console.error('❌ Erreur handleJoinConversation:', error);
       socket.emit('error', { message: error.message });
     }
   }
@@ -360,7 +336,6 @@ class SocketHandler {
   handleTypingStart(socket, data) {
     const { conversationId } = data;
     
-    console.log(`⌨️ ${socket.user.username} commence à taper dans ${conversationId}`);
     
     socket.to(`conversation:${conversationId}`).emit('typing:start', {
       user: {
@@ -378,7 +353,6 @@ class SocketHandler {
   handleTypingStop(socket, data) {
     const { conversationId } = data;
     
-    console.log(`⌨️ ${socket.user.username} arrête de taper dans ${conversationId}`);
     
     socket.to(`conversation:${conversationId}`).emit('typing:stop', {
       user: {
@@ -408,7 +382,6 @@ class SocketHandler {
       });
 
     } catch (error) {
-      console.error('❌ Erreur handleMarkConversationAsReadOld:', error);
     }
   }
 
@@ -429,10 +402,8 @@ class SocketHandler {
         }
       }
 
-      console.log(`📚 ${socket.user.username} a rejoint ${conversations.conversations.length} conversations`);
 
     } catch (error) {
-      console.error('❌ Erreur joinUserConversations:', error);
     }
   }
 
@@ -440,7 +411,6 @@ class SocketHandler {
     try {
       await User.update({ status }, { where: { id: userId } });
     } catch (error) {
-      console.error('❌ Erreur updateUserStatus:', error);
     }
   }
 
@@ -479,9 +449,7 @@ class SocketHandler {
         }
       }
 
-      console.log(`👥 Statut 'online' notifié à ${contactIds.size} contacts pour l'utilisateur ${userId}`);
     } catch (error) {
-      console.error('❌ Erreur notifyContactsUserOnline:', error);
     }
   }
 
@@ -520,9 +488,7 @@ class SocketHandler {
         }
       }
 
-      console.log(`👥 Statut 'offline' notifié à ${contactIds.size} contacts pour l'utilisateur ${userId}`);
     } catch (error) {
-      console.error('❌ Erreur notifyContactsUserOffline:', error);
     }
   }
 
@@ -572,13 +538,11 @@ class SocketHandler {
             const socket = this.io.sockets.sockets.get(socketId);
             if (socket) {
               socket.emit(eventName, data);
-              console.log(`📨 Notification ${eventName} envoyée à ${member.user?.username} (${socketId})`);
             }
           }
         }
       }
     } catch (error) {
-      console.error('❌ Erreur notifyConversationMembers:', error);
     }
   }
 
@@ -590,7 +554,6 @@ class SocketHandler {
     try {
       const { conversationId } = data;
       
-      console.log(`✅ ${socket.user.username} accepte la conversation ${conversationId}`);
 
       // Accepter la conversation via le service
       const conversation = await messageService.acceptConversation(conversationId, socket.userId);
@@ -617,10 +580,8 @@ class SocketHandler {
         timestamp: new Date().toISOString()
       });
 
-      console.log(`✅ Conversation ${conversationId} acceptée par ${socket.user.username}`);
 
     } catch (error) {
-      console.error('❌ Erreur handleAcceptConversation:', error);
       socket.emit('error', { 
         message: error.message || 'Erreur lors de l\'acceptation de la conversation',
         conversationId: data.conversationId
@@ -632,7 +593,6 @@ class SocketHandler {
     try {
       const { conversationId } = data;
       
-      console.log(`❌ ${socket.user.username} refuse la conversation ${conversationId}`);
 
       // Refuser la conversation via le service
       await messageService.rejectConversation(conversationId, socket.userId);
@@ -657,10 +617,8 @@ class SocketHandler {
         timestamp: new Date().toISOString()
       });
 
-      console.log(`❌ Conversation ${conversationId} refusée par ${socket.user.username}`);
 
     } catch (error) {
-      console.error('❌ Erreur handleRejectConversation:', error);
       socket.emit('error', { 
         message: error.message || 'Erreur lors du refus de la conversation',
         conversationId: data.conversationId
@@ -676,7 +634,6 @@ class SocketHandler {
     try {
       const { messageId } = data;
       
-      console.log(`👁️ ${socket.user.username} marque message ${messageId} comme lu`);
 
       // Marquer comme lu via le service
       const result = await messageService.markMessageAsRead(messageId, socket.userId);
@@ -715,7 +672,6 @@ class SocketHandler {
       }
 
     } catch (error) {
-      console.error('❌ Erreur handleMarkMessageAsRead:', error);
       socket.emit('error', { 
         message: error.message || 'Erreur lors du marquage du message',
         messageId: data.messageId
@@ -727,7 +683,6 @@ class SocketHandler {
     try {
       const { conversationId, lastMessageId } = data;
       
-      console.log(`👁️ ${socket.user.username} marque conversation ${conversationId} comme lue`);
 
       // Marquer comme lu via le service
       const result = await messageService.markConversationAsRead(
@@ -764,7 +719,6 @@ class SocketHandler {
       }
 
     } catch (error) {
-      console.error('❌ Erreur handleMarkConversationAsRead:', error);
       socket.emit('error', { 
         message: error.message || 'Erreur lors du marquage de la conversation',
         conversationId: data.conversationId
@@ -778,7 +732,6 @@ class SocketHandler {
 
   broadcastUserStatusChange(userId, newStatus, displayName) {
     try {
-      console.log(`📡 Diffusion changement de statut: ${displayName} (${userId}) -> ${newStatus}`);
 
       // Diffuser à tous les utilisateurs connectés (sauf celui qui change)
       this.io.emit('user:statusChanged', {
@@ -788,10 +741,8 @@ class SocketHandler {
         timestamp: new Date().toISOString()
       });
 
-      console.log(`✅ Changement de statut diffusé pour ${displayName}`);
       
     } catch (error) {
-      console.error('❌ Erreur broadcastUserStatusChange:', error);
     }
   }
 }

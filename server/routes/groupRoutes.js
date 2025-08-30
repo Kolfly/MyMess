@@ -39,6 +39,5 @@ router.get('/:conversationId/details', groupController.getDetails);
 // POST /api/groups/:conversationId/leave
 router.post('/:conversationId/leave', groupController.leaveGroup);
 
-console.log('✅ Routes de gestion de groupe configurées');
 
 module.exports = router;

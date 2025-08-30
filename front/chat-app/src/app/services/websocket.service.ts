@@ -52,10 +52,6 @@ export class WebSocketService {
     const currentUser = this.authService.getCurrentUser();
     const token = this.authService.getToken();
 
-    console.log('🔍 Tentative de connexion WebSocket:');
-    console.log('👤 Utilisateur courant:', currentUser);
-    console.log('🔑 Token présent:', !!token);
-    console.log('🔑 Token (premiers chars):', token ? token.substring(0, 20) + '...' : 'AUCUN');
     
     // Décoder le token pour voir son contenu (temporaire pour debug)
     if (token) {
@@ -63,24 +59,19 @@ export class WebSocketService {
         const tokenParts = token.split('.');
         if (tokenParts.length === 3) {
           const payload = JSON.parse(atob(tokenParts[1]));
-          console.log('🔍 Contenu du token JWT:', payload);
         }
       } catch (e) {
-        console.error('❌ Erreur décodage token:', e);
       }
     }
 
     if (!currentUser || !token) {
-      console.error('❌ Impossible de se connecter: utilisateur non authentifié');
       return;
     }
 
     if (this.socket?.connected) {
-      console.log('⚡ Socket déjà connecté');
       return;
     }
 
-    console.log('🔌 Connexion WebSocket...');
 
     this.socket = io(this.SERVER_URL, {
       auth: {
@@ -97,153 +88,124 @@ export class WebSocketService {
 
     // Événements de connexion
     this.socket.on('connect', () => {
-      console.log('✅ WebSocket connecté:', this.socket?.id);
       this.connectionStatusSubject.next(true);
     });
 
     this.socket.on('disconnect', (reason) => {
-      console.log('❌ WebSocket déconnecté:', reason);
       this.connectionStatusSubject.next(false);
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('❌ Erreur de connexion WebSocket:', error);
       this.connectionStatusSubject.next(false);
     });
 
     // Événements d'authentification
     this.socket.on('auth:success', (data) => {
-      console.log('🔐 Authentification WebSocket réussie:', data);
     });
 
     this.socket.on('auth:error', (error) => {
-      console.error('🔐 Erreur d\'authentification WebSocket:', error);
       this.disconnect();
     });
 
     // Événements de messages
     this.socket.on('message:new', (data) => {
-      console.log('📨 Nouveau message reçu:', data);
       this.handleNewMessage(data);
     });
 
     this.socket.on('message:sent', (data) => {
-      console.log('✅ Confirmation d\'envoi message:', data);
       // Ne pas traiter comme nouveau message ici pour éviter les doublons
       // Le message sera géré par message:new
     });
 
     // Événements de conversations
     this.socket.on('conversation:updated', (data) => {
-      console.log('🔄 Conversation mise à jour:', data);
       this.handleConversationUpdate(data);
     });
 
     this.socket.on('message:edited', (data) => {
-      console.log('📝 Message modifié:', data);
       this.handleMessageUpdate(data);
     });
 
     this.socket.on('message:deleted', (data) => {
-      console.log('🗑️ Message supprimé:', data);
       this.handleMessageDeletion(data);
     });
 
     // Événements de statut de message
     this.socket.on('message:delivered', (data) => {
-      console.log('✅ Message livré:', data);
       this.handleMessageStatus(data, 'delivered');
     });
 
     this.socket.on('message:read', (data) => {
-      console.log('👁️ Message lu:', data);
       this.handleMessageStatus(data, 'read');
     });
 
     // Événements de présence utilisateur
     this.socket.on('user:online', (data) => {
-      console.log('🟢 Utilisateur en ligne:', data);
       this.handleUserOnline(data);
     });
 
     this.socket.on('user:offline', (data) => {
-      console.log('🔴 Utilisateur hors ligne:', data);
       this.handleUserOffline(data);
     });
 
     this.socket.on('users:online', (users) => {
-      console.log('👥 Utilisateurs en ligne:', users);
       this.onlineUsersSubject.next(users);
     });
 
     // Événements de conversation
     this.socket.on('conversation:updated', (data) => {
-      console.log('💬 Conversation mise à jour:', data);
       this.handleConversationUpdate(data);
     });
 
     // Événements demandes de conversation (US022)
     this.socket.on('conversation:accepted', (data) => {
-      console.log('✅ Conversation acceptée:', data);
       this.handleConversationAccepted(data);
     });
 
     this.socket.on('conversation:rejected', (data) => {
-      console.log('❌ Conversation rejetée:', data);
       this.handleConversationRejected(data);
     });
 
     this.socket.on('conversation:accepted_success', (data) => {
-      console.log('✅ Acceptation réussie:', data);
     });
 
     this.socket.on('conversation:rejected_success', (data) => {
-      console.log('❌ Rejet réussi:', data);
     });
 
     // Événements statuts de lecture (US009)
     this.socket.on('message:readStatus', (data) => {
-      console.log('👁️ Statut de lecture message:', data);
       this.handleMessageReadStatus(data);
     });
 
     this.socket.on('conversation:readStatus', (data) => {
-      console.log('👁️ Statut de lecture conversation:', data);
       this.handleConversationReadStatus(data);
     });
 
     // Événements indicateurs de frappe (US010)
     this.socket.on('typing:start', (data) => {
-      console.log('⌨️ Utilisateur commence à taper:', data);
       this.handleUserStartTyping(data);
     });
 
     this.socket.on('typing:stop', (data) => {
-      console.log('⌨️ Utilisateur arrête de taper:', data);
       this.handleUserStopTyping(data);
     });
 
     this.socket.on('message:readConfirmed', (data) => {
-      console.log('✅ Message marqué comme lu:', data);
     });
 
     this.socket.on('conversation:readConfirmed', (data) => {
-      console.log('✅ Conversation marquée comme lue:', data);
     });
 
     // Événements de changement de statut utilisateur (US013)
     this.socket.on('user:statusChanged', (data) => {
-      console.log('🎨 Changement de statut utilisateur:', data);
       this.handleUserStatusChanged(data);
     });
 
     // Événements système
     this.socket.on('welcome', (data) => {
-      console.log('🎉 Message de bienvenue:', data);
     });
 
     this.socket.on('error', (error) => {
-      console.error('❌ Erreur WebSocket reçue:', error);
     });
   }
 
@@ -252,23 +214,15 @@ export class WebSocketService {
     const { message, conversationId } = data;
     const currentUser = this.authService.getCurrentUser();
     
-    console.log('📨 New message received:', {
-      messageId: message.id,
-      conversationId,
-      senderName: message.sender?.displayName || message.sender?.username,
-      isOwnMessage: message.senderId === currentUser?.id
-    });
     
     // Émettre le nouveau message pour que les composants puissent l'écouter
     this.newMessageSubject.next(message);
     
     // Toujours mettre à jour le service de conversation (pour l'expéditeur ET le destinataire)
-    console.log('🔄 Updating conversation list with new message');
     this.conversationService.updateConversationLastMessage(conversationId, message);
     
     // Incrémenter le compteur de messages non lus seulement si ce n'est pas l'utilisateur actuel
     if (currentUser && message.senderId !== currentUser.id) {
-      console.log('📊 Incrementing unread count');
       this.conversationService.updateUnreadCount(conversationId, true);
     }
   }
@@ -278,7 +232,6 @@ export class WebSocketService {
     const selectedConv = this.conversationService.getSelectedConversation();
     if (selectedConv && selectedConv.id === data.conversationId) {
       // Émettre un événement pour recharger les messages
-      console.log('📝 Message mis à jour dans la conversation active');
     }
   }
 
@@ -286,12 +239,10 @@ export class WebSocketService {
     // Recharger les messages de la conversation si elle est sélectionnée
     const selectedConv = this.conversationService.getSelectedConversation();
     if (selectedConv && selectedConv.id === data.conversationId) {
-      console.log('🗑️ Message supprimé dans la conversation active');
     }
   }
 
   private handleMessageStatus(data: { messageId: string, status: string }, status: 'delivered' | 'read'): void {
-    console.log(`📋 Statut de message mis à jour: ${status}`, data);
   }
 
   private handleUserOnline(data: { userId: string }): void {
@@ -311,14 +262,12 @@ export class WebSocketService {
   joinConversation(conversationId: string): void {
     if (this.socket?.connected) {
       this.socket.emit('conversation:join', { conversationId });
-      console.log('🏠 Rejoint la conversation:', conversationId);
     }
   }
 
   leaveConversation(conversationId: string): void {
     if (this.socket?.connected) {
       this.socket.emit('conversation:leave', { conversationId });
-      console.log('🚪 Quitté la conversation:', conversationId);
     }
   }
 
@@ -330,7 +279,6 @@ export class WebSocketService {
         messageType,
         replyToId
       });
-      console.log('📤 Message envoyé via WebSocket:', { conversationId, content });
     }
   }
 
@@ -350,7 +298,6 @@ export class WebSocketService {
   // Gestion de la connexion
   disconnect(): void {
     if (this.socket) {
-      console.log('🔌 Déconnexion WebSocket...');
       this.socket.disconnect();
       this.socket = null;
       this.connectionStatusSubject.next(false);
@@ -374,7 +321,6 @@ export class WebSocketService {
 
   // Gérer les mises à jour de conversation
   private handleConversationUpdate(data: any): void {
-    console.log('🔄 Traitement mise à jour conversation:', data);
     this.conversationUpdateSubject.next({
       conversationId: data.conversationId,
       action: data.action
@@ -414,7 +360,6 @@ export class WebSocketService {
   }
 
   private handleUserStatusChanged(data: { userId: string, status: string, displayName: string }): void {
-    console.log('🎨 Traitement changement de statut:', data);
     this.userStatusChangedSubject.next(data);
   }
 
@@ -444,13 +389,11 @@ export class WebSocketService {
   // ================================================
 
   private handleConversationAccepted(data: any): void {
-    console.log('✅ Gestion acceptation conversation:', data);
     // Recharger les conversations pour mettre à jour les statuts
     this.conversationService.loadConversations().subscribe();
   }
 
   private handleConversationRejected(data: any): void {
-    console.log('❌ Gestion rejet conversation:', data);
     // Recharger les conversations pour mettre à jour les statuts
     this.conversationService.loadConversations().subscribe();
   }
@@ -459,7 +402,6 @@ export class WebSocketService {
   acceptConversation(conversationId: string): void {
     if (this.socket?.connected) {
       this.socket.emit('conversation:accept', { conversationId });
-      console.log('✅ Acceptation conversation via WebSocket:', conversationId);
     }
   }
 
@@ -467,7 +409,6 @@ export class WebSocketService {
   rejectConversation(conversationId: string): void {
     if (this.socket?.connected) {
       this.socket.emit('conversation:reject', { conversationId });
-      console.log('❌ Rejet conversation via WebSocket:', conversationId);
     }
   }
 
@@ -476,13 +417,11 @@ export class WebSocketService {
   // ================================================
 
   private handleMessageReadStatus(data: any): void {
-    console.log('👁️ Gestion statut lecture message:', data);
     // Émettre un événement pour les composants qui écoutent
     // TODO: Implémenter la mise à jour des indicateurs de lecture dans l'interface
   }
 
   private handleConversationReadStatus(data: any): void {
-    console.log('👁️ Gestion statut lecture conversation:', data);
     // Émettre un événement pour les composants qui écoutent
     // TODO: Implémenter la mise à jour des indicateurs de lecture dans l'interface
   }
@@ -491,7 +430,6 @@ export class WebSocketService {
   markMessageAsRead(messageId: string): void {
     if (this.socket?.connected) {
       this.socket.emit('message:markAsRead', { messageId });
-      console.log('👁️ Marquage message lu via WebSocket:', messageId);
     }
   }
 
@@ -502,7 +440,6 @@ export class WebSocketService {
         conversationId,
         lastMessageId
       });
-      console.log('👁️ Marquage conversation lue via WebSocket:', conversationId);
     }
   }
 }

@@ -7,11 +7,9 @@ const sequelize = require('./database/config/database');
 
 async function runMigrations() {
   try {
-    console.log('🚀 Démarrage des migrations...');
     
     // Vérifier la connexion à la base
     await sequelize.authenticate();
-    console.log('✅ Connexion à la base de données établie');
     
     // Créer la table de suivi des migrations si elle n'existe pas
     await sequelize.query(`
@@ -34,12 +32,10 @@ async function runMigrations() {
       .filter(file => file.endsWith('.js'))
       .sort(); // Important: trier par nom pour l'ordre d'exécution
     
-    console.log(`📁 ${migrationFiles.length} fichiers de migration trouvés`);
     
     // Exécuter les migrations non encore appliquées
     for (const file of migrationFiles) {
       if (!executedNames.includes(file)) {
-        console.log(`⚙️ Exécution de la migration: ${file}`);
         
         const migrationPath = path.join(migrationsDir, file);
         const migration = require(migrationPath);
@@ -53,16 +49,12 @@ async function runMigrations() {
           { replacements: [file] }
         );
         
-        console.log(`✅ Migration ${file} exécutée avec succès`);
       } else {
-        console.log(`⏭️ Migration ${file} déjà exécutée`);
       }
     }
     
-    console.log('🎉 Toutes les migrations ont été exécutées avec succès !');
     
   } catch (error) {
-    console.error('❌ Erreur lors de l\'exécution des migrations:', error);
     process.exit(1);
   } finally {
     await sequelize.close();

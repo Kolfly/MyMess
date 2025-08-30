@@ -44,7 +44,6 @@ class JWTUtilities {
       return token;
 
     } catch (error) {
-      console.error('Erreur lors de la génération du token d\'accès:', error);
       throw new Error('Impossible de générer le token d\'authentification');
     }
   }
@@ -79,7 +78,6 @@ class JWTUtilities {
       return refreshToken;
 
     } catch (error) {
-      console.error('Erreur lors de la génération du refresh token:', error);
       throw new Error('Impossible de générer le refresh token');
     }
   }
@@ -290,7 +288,6 @@ class JWTUtilities {
     }
 
     if (secret.length < 32) {
-      console.warn('⚠️  JWT_SECRET est courte (moins de 32 caractères). Utilise une clé plus longue pour une sécurité optimale.');
     }
 
     // Vérifier que ce n'est pas une valeur par défaut dangereuse
@@ -303,7 +300,6 @@ class JWTUtilities {
       throw new Error('🚨 JWT_SECRET utilise une valeur par défaut dangereuse ! Change-la immédiatement !');
     }
 
-    console.log('✅ Configuration JWT validée avec succès');
     return true;
   }
 
@@ -320,16 +316,12 @@ const jwtUtils = new JWTUtilities();
 try {
   jwtUtils.validateJWTConfiguration();
 } catch (error) {
-  console.error('❌ Erreur de configuration JWT:', error.message);
   
   if (error.message.includes('JWT_SECRET n\'est pas défini')) {
-    console.log('💡 Suggestion de clé secrète sécurisée:');
-    console.log('   JWT_SECRET=' + jwtUtils.generateSecureSecret());
   }
   
   // En production, arrêter l'application si la configuration JWT est incorrecte
   if (process.env.NODE_ENV === 'production') {
-    console.error('🛑 Arrêt de l\'application : configuration JWT invalide');
     process.exit(1);
   }
 }

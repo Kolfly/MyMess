@@ -8,14 +8,12 @@ const createSequelizeInstance = () => {
 
   // Stratégie 1: Si on a une DATABASE_URL complète (plus simple et sécurisé)
   if (process.env.DATABASE_URL) {
-    console.log('🔗 Connexion via DATABASE_URL...');
     
     sequelize = new Sequelize(process.env.DATABASE_URL, {
       dialect: 'postgres',
       
       // Le logging nous aide à voir ce qui se passe pendant le développement
       // En production, on le désactive pour éviter de logger des informations sensibles
-      logging: process.env.NODE_ENV === 'development' && process.env.DEBUG_SQL === 'true' ? console.log : false,
       
       // Configuration SSL - CRUCIAL pour les bases distantes
       dialectOptions: {
@@ -59,7 +57,6 @@ const createSequelizeInstance = () => {
   } 
   // Stratégie 2: Configuration avec paramètres séparés
   else {
-    console.log('🔗 Connexion via paramètres séparés...');
     
     sequelize = new Sequelize(
       process.env.DB_NAME,
@@ -69,7 +66,6 @@ const createSequelizeInstance = () => {
         host: process.env.DB_HOST,
         port: parseInt(process.env.DB_PORT) || 5432,
         dialect: 'postgres',
-        logging: process.env.NODE_ENV === 'development' && process.env.DEBUG_SQL === 'true' ? console.log : false,
         
         dialectOptions: {
           ssl: process.env.DB_SSL === 'true' ? {
@@ -114,31 +110,21 @@ const sequelize = createSequelizeInstance();
 // Fonction pour tester la connexion avec gestion d'erreurs détaillées
 const testConnection = async () => {
   try {
-    console.log('🔄 Test de connexion à PostgreSQL...');
     await sequelize.authenticate();
-    console.log('✅ Connexion PostgreSQL établie avec succès !');
     
     // Afficher quelques infos sur la connexion (sans les credentials)
     const dbName = sequelize.config.database;
     const dbHost = sequelize.config.host;
-    console.log(`📊 Connecté à la base: ${dbName} sur ${dbHost}`);
     
   } catch (error) {
-    console.error('❌ Erreur de connexion PostgreSQL:');
     
     // Messages d'erreur détaillés pour t'aider à diagnostiquer
     if (error.name === 'SequelizeConnectionRefusedError') {
-      console.error('   → Connexion refusée. Vérifie que ton serveur PostgreSQL est accessible.');
     } else if (error.name === 'SequelizeAccessDeniedError') {
-      console.error('   → Accès refusé. Vérifie tes identifiants (username/password).');
     } else if (error.name === 'SequelizeHostNotFoundError') {
-      console.error('   → Host non trouvé. Vérifie l\'URL de ton serveur PostgreSQL.');
     } else if (error.original && error.original.code === 'ENOTFOUND') {
-      console.error('   → Serveur introuvable. Vérifie ton nom d\'hôte/URL.');
     } else if (error.original && error.original.code === 'ECONNREFUSED') {
-      console.error('   → Connexion refusée. Le serveur PostgreSQL est-il démarré?');
     } else {
-      console.error('   → Erreur:', error.message);
     }
     
     throw error;
@@ -147,7 +133,6 @@ const testConnection = async () => {
 
 // Tester la connexion au moment de l'importation
 testConnection().catch(err => {
-  console.error('💥 Impossible de se connecter à la base de données');
   // En développement, on peut continuer, en production on arrête tout
   if (process.env.NODE_ENV === 'production') {
     process.exit(1);

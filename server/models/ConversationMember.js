@@ -269,6 +269,5 @@ ConversationMember.getUnreadCount = async function(conversationId, userId) {
   });
 };
 
-console.log('✅ Modèle ConversationMember défini');
 
 module.exports = ConversationMember;

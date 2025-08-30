@@ -50,7 +50,6 @@ class AuthController {
       });
 
     } catch (error) {
-      console.error('Erreur registration:', error);
       
       // Étape 4: Gestion centralisée des erreurs
       // On traduit les erreurs techniques en messages compréhensibles pour l'utilisateur
@@ -126,7 +125,6 @@ class AuthController {
       });
 
     } catch (error) {
-      console.error('Erreur login:', error);
       
       // Gestion spécialisée des erreurs de connexion
       if (error.message.includes('incorrect') || error.message.includes('invalide')) {
@@ -174,7 +172,6 @@ class AuthController {
       });
 
     } catch (error) {
-      console.error('Erreur logout:', error);
       
       // Même si la déconnexion échoue côté serveur, 
       // on peut considérer que c'est réussi côté client
@@ -202,7 +199,6 @@ class AuthController {
       });
 
     } catch (error) {
-      console.error('Erreur getMe:', error);
       
       res.status(500).json({
         success: false,
@@ -240,7 +236,6 @@ class AuthController {
       });
 
     } catch (error) {
-      console.error('Erreur updateProfile:', error);
       
       if (error.message.includes('déjà pris')) {
         return res.status(409).json({
@@ -286,7 +281,6 @@ class AuthController {
       });
 
     } catch (error) {
-      console.error('Erreur refreshToken:', error);
       
       if (error.message.includes('Token') || error.message.includes('token')) {
         return res.status(401).json({
@@ -346,7 +340,6 @@ class AuthController {
       });
 
     } catch (error) {
-      console.error('Erreur changePassword:', error);
       
       res.status(500).json({
         success: false,
@@ -376,7 +369,6 @@ class AuthController {
       });
 
     } catch (error) {
-      console.error('Erreur getAccountStats:', error);
       
       res.status(500).json({
         success: false,
@@ -435,7 +427,6 @@ class AuthController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur vérification email:', error.message);
       
       return res.status(400).json({
         success: false,
@@ -499,7 +490,6 @@ class AuthController {
       });
 
     } catch (error) {
-      console.error('❌ Erreur changement statut:', error.message);
       
       return res.status(400).json({
         success: false,

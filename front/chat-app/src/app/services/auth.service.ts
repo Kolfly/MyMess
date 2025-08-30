@@ -51,7 +51,6 @@ export class AuthService {
   private initializeAuth(): void {
     const token = this.getToken();
     if (token) {
-      console.log('🔍 Token trouvé, vérification en cours...');
       
       // Vérifier si le token est encore valide avec timeout plus long
       this.getMe().pipe(
@@ -59,28 +58,21 @@ export class AuthService {
       ).subscribe({
         next: (response) => {
           if (response.success) {
-            console.log('✅ Token valide, utilisateur authentifié');
             this.currentUserSubject.next(response.data.user);
             this.isAuthenticatedSubject.next(true);
           } else {
-            console.log('❌ Token invalide, déconnexion');
             this.logout();
           }
           this.authInitialized = true;
-          console.log('🔍 AuthService: Initialisation terminée (success)');
         },
         error: (error) => {
-          console.log('❌ Erreur validation token:', error.message);
           this.logout();
           this.authInitialized = true;
-          console.log('🔍 AuthService: Initialisation terminée (error)');
         }
       });
     } else {
-      console.log('❌ Pas de token trouvé');
       this.isAuthenticatedSubject.next(false);
       this.authInitialized = true;
-      console.log('🔍 AuthService: Initialisation terminée (no token)');
     }
   }
 
@@ -255,20 +247,16 @@ export class AuthService {
     this.isAuthenticatedSubject.next(true);
     
     // Passer automatiquement en statut "online" lors de la connexion
-    console.log('🔄 Passage automatique en statut "online" après connexion');
     this.updateProfile({ status: 'online' }).subscribe({
       next: (updateResponse) => {
-        console.log('✅ Statut mis à jour vers "online" après connexion');
       },
       error: (error) => {
-        console.warn('⚠️ Erreur lors de la mise à jour du statut vers "online":', error);
         // Ne pas bloquer la connexion si la mise à jour du statut échoue
       }
     });
   }
 
   private handleError = (error: any) => {
-    console.error('❌ Erreur AuthService:', error);
     
     // Si erreur 401, token expiré
     if (error.status === 401) {

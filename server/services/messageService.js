@@ -15,7 +15,6 @@ class MessageService {
     try {
       const { limit = 20, offset = 0, includeArchived = false, status = 'accepted' } = options;
 
-      console.log(`🔍 Récupération des conversations pour l'utilisateur: ${userId} (statut: ${status})`);
 
       // Construire la clause where pour le statut
       const whereClause = includeArchived ? {} : { isArchived: false };
@@ -89,7 +88,6 @@ class MessageService {
               unreadCount
             };
           } catch (err) {
-            console.warn(`⚠️ Erreur calcul unreadCount pour ${conv.id}:`, err.message);
             const convData = conv.toJSON();
             
             // Ajouter displayName même en cas d'erreur
@@ -112,8 +110,6 @@ class MessageService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur getUserConversations:', error.message);
-      console.error('Stack:', error.stack);
       throw new Error('Erreur lors de la récupération des conversations');
     }
   }
@@ -121,7 +117,6 @@ class MessageService {
   // 💬 CRÉER UNE CONVERSATION PRIVÉE
   async createPrivateConversation(user1Id, user2Id) {
     try {
-      console.log(`💬 Création conversation privée: ${user1Id} ↔ ${user2Id}`);
 
       // Vérifier si une conversation privée existe déjà (incluant celles refusées/en attente)
       const existingConv = await Conversation.findPrivateConversation(user1Id, user2Id);
@@ -137,7 +132,6 @@ class MessageService {
         
         // Si elle est déjà en pending ou acceptée, retourner les détails avec le bon contexte
         if (existingConv.status === 'pending') {
-          console.log(`⚠️ Conversation en attente trouvée: créée par ${existingConv.createdBy}, demandée par ${user1Id}`);
           // Si c'est la même personne qui refait la demande, retourner la conversation
           if (existingConv.createdBy === user1Id) {
             return await this.getConversationDetails(existingConv.id, user1Id, { skipMemberCheck: true });
@@ -183,11 +177,9 @@ class MessageService {
         }
       ]);
 
-      console.log(`✅ Conversation privée créée en attente: ${conversation.id}`);
       return await this.getConversationDetails(conversation.id, user1Id, { skipMemberCheck: true });
 
     } catch (error) {
-      console.error('❌ Erreur createPrivateConversation:', error);
       throw new Error(error.message || 'Erreur lors de la création de la conversation privée');
     }
   }
@@ -195,7 +187,6 @@ class MessageService {
   // 👥 CRÉER UNE CONVERSATION GROUPE
   async createGroupConversation(creatorId, name, description, memberIds = []) {
     try {
-      console.log(`👥 Création conversation groupe: ${name} par ${creatorId}`);
 
       // Vérifier que le nom n'est pas vide
       if (!name || name.trim().length === 0) {
@@ -232,11 +223,9 @@ class MessageService {
 
       await ConversationMember.bulkCreate(members);
 
-      console.log(`✅ Conversation groupe créée: ${conversation.id} avec ${members.length} membres`);
       return await this.getConversationDetails(conversation.id, creatorId);
 
     } catch (error) {
-      console.error('❌ Erreur createGroupConversation:', error);
       throw new Error(error.message || 'Erreur lors de la création du groupe');
     }
   }
@@ -244,7 +233,6 @@ class MessageService {
   // 📄 RÉCUPÉRER LES DÉTAILS D'UNE CONVERSATION
   async getConversationDetails(conversationId, userId, options = {}) {
     try {
-      console.log(`📄 Récupération détails conversation: ${conversationId}`);
 
       const conversation = await Conversation.findByPk(conversationId, {
         include: [
@@ -289,7 +277,6 @@ class MessageService {
       return conversation;
 
     } catch (error) {
-      console.error('❌ Erreur getConversationDetails:', error);
       throw new Error(error.message || 'Erreur lors de la récupération des détails');
     }
   }
@@ -303,7 +290,6 @@ class MessageService {
     try {
       const { messageType = 'text', replyToId = null, metadata = null } = options;
 
-      console.log(`📝 Envoi message dans conversation ${conversationId} par ${senderId}`);
 
       // Vérifier que l'utilisateur est membre de la conversation
       const conversation = await Conversation.findByPk(conversationId);
@@ -366,12 +352,10 @@ class MessageService {
         fullMessage.replyTo.sender.dataValues.displayName = fullMessage.replyTo.sender.getFullName();
       }
 
-      console.log(`✅ Message envoyé: ${message.id}`);
 
       return fullMessage;
 
     } catch (error) {
-      console.error('❌ Erreur sendMessage:', error);
       throw new Error(error.message || 'Erreur lors de l\'envoi du message');
     }
   }
@@ -381,7 +365,6 @@ class MessageService {
     try {
       const { limit = 50, offset = 0, before = null, after = null } = options;
 
-      console.log(`📋 Récupération messages conversation: ${conversationId}`);
 
       // Vérifier l'accès
       const conversation = await Conversation.findByPk(conversationId);
@@ -472,7 +455,6 @@ class MessageService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur getConversationMessages:', error);
       throw new Error(error.message || 'Erreur lors de la récupération des messages');
     }
   }
@@ -480,7 +462,6 @@ class MessageService {
   // ✏️ MODIFIER UN MESSAGE
   async editMessage(messageId, userId, newContent) {
     try {
-      console.log(`✏️ Modification message: ${messageId} par ${userId}`);
 
       const message = await Message.findByPk(messageId);
       if (!message) {
@@ -501,7 +482,6 @@ class MessageService {
         content: newContent.trim()
       });
 
-      console.log(`✅ Message modifié: ${messageId}`);
       
       const updatedMessage = await Message.findByPk(messageId, {
         include: [
@@ -524,7 +504,6 @@ class MessageService {
       return updatedMessage;
 
     } catch (error) {
-      console.error('❌ Erreur editMessage:', error);
       throw new Error(error.message || 'Erreur lors de la modification du message');
     }
   }
@@ -532,7 +511,6 @@ class MessageService {
   // 🗑️ SUPPRIMER UN MESSAGE
   async deleteMessage(messageId, userId) {
     try {
-      console.log(`🗑️ Suppression message: ${messageId} par ${userId}`);
 
       const message = await Message.findByPk(messageId);
       if (!message) {
@@ -546,7 +524,6 @@ class MessageService {
       const conversationId = message.conversationId;
       await message.destroy();
 
-      console.log(`✅ Message supprimé: ${messageId}`);
       
       // 🔌 ÉMETTRE ÉVÉNEMENT WEBSOCKET
       if (global.io) {
@@ -561,7 +538,6 @@ class MessageService {
       return true;
 
     } catch (error) {
-      console.error('❌ Erreur deleteMessage:', error);
       throw new Error(error.message || 'Erreur lors de la suppression du message');
     }
   }
@@ -569,7 +545,6 @@ class MessageService {
   // 📖 MARQUER LES MESSAGES COMME LUS
   async markAsRead(conversationId, userId, messageId = null) {
     try {
-      console.log(`📖 Marquage comme lu: conversation ${conversationId} par ${userId}`);
 
       // Récupérer le membre
       const member = await ConversationMember.findOne({
@@ -598,11 +573,9 @@ class MessageService {
         await member.markAsRead(targetMessageId);
       }
 
-      console.log(`✅ Messages marqués comme lus jusqu'à: ${targetMessageId}`);
       return true;
 
     } catch (error) {
-      console.error('❌ Erreur markAsRead:', error);
       throw new Error(error.message || 'Erreur lors du marquage des messages');
     }
   }
@@ -614,7 +587,6 @@ class MessageService {
   // ✅ ACCEPTER UNE CONVERSATION
   async acceptConversation(conversationId, userId) {
     try {
-      console.log(`✅ Acceptation conversation ${conversationId} par ${userId}`);
 
       const conversation = await Conversation.findByPk(conversationId);
       if (!conversation) {
@@ -638,13 +610,11 @@ class MessageService {
         lastActivityAt: new Date()
       });
 
-      console.log(`✅ Conversation acceptée: ${conversationId}`);
 
       // Retourner la conversation complète
       return await this.getConversationDetails(conversationId, userId);
 
     } catch (error) {
-      console.error('❌ Erreur acceptConversation:', error);
       throw new Error(error.message || 'Erreur lors de l\'acceptation de la conversation');
     }
   }
@@ -652,7 +622,6 @@ class MessageService {
   // ❌ REFUSER UNE CONVERSATION
   async rejectConversation(conversationId, userId) {
     try {
-      console.log(`❌ Refus conversation ${conversationId} par ${userId}`);
 
       const conversation = await Conversation.findByPk(conversationId);
       if (!conversation) {
@@ -676,11 +645,9 @@ class MessageService {
         lastActivityAt: new Date()
       });
 
-      console.log(`❌ Conversation refusée: ${conversationId}`);
       return { success: true, message: 'Conversation refusée' };
 
     } catch (error) {
-      console.error('❌ Erreur rejectConversation:', error);
       throw new Error(error.message || 'Erreur lors du refus de la conversation');
     }
   }
@@ -688,19 +655,15 @@ class MessageService {
   // 📋 RÉCUPÉRER LES CONVERSATIONS EN ATTENTE
   async getPendingConversations(userId) {
     try {
-      console.log(`📋 Récupération conversations en attente pour: ${userId}`);
       
       const result = await this.getUserConversations(userId, { status: 'pending' });
       
-      console.log(`🔍 DEBUG - Conversations pending trouvées pour ${userId}:`, result.conversations.length);
       result.conversations.forEach(conv => {
-        console.log(`🔍 DEBUG - Conversation ${conv.id}: createdBy=${conv.createdBy}, status=${conv.status}, type=${conv.type}`);
       });
       
       return result;
 
     } catch (error) {
-      console.error('❌ Erreur getPendingConversations:', error);
       throw new Error(error.message || 'Erreur lors de la récupération des demandes en attente');
     }
   }
@@ -712,7 +675,6 @@ class MessageService {
   // 🗑️ SUPPRIMER UNE CONVERSATION
   async deleteConversation(conversationId, userId) {
     try {
-      console.log(`🗑️ Suppression conversation ${conversationId} pour utilisateur ${userId}`);
 
       // Vérifier que la conversation existe et que l'utilisateur en fait partie
       const conversation = await Conversation.findByPk(conversationId, {
@@ -741,7 +703,6 @@ class MessageService {
           }
         );
 
-        console.log(`✅ Conversation privée ${conversationId} archivée pour l'utilisateur ${userId}`);
         return { action: 'archived', type: 'private' };
       }
 
@@ -752,7 +713,6 @@ class MessageService {
       }
 
     } catch (error) {
-      console.error('❌ Erreur deleteConversation:', error);
       throw new Error(error.message || 'Erreur lors de la suppression de la conversation');
     }
   }
@@ -764,7 +724,6 @@ class MessageService {
   // 👁️ MARQUER UN MESSAGE COMME LU
   async markMessageAsRead(messageId, userId) {
     try {
-      console.log(`👁️ Marquage message ${messageId} comme lu par ${userId}`);
 
       // Vérifier que le message existe
       const message = await Message.findByPk(messageId, {
@@ -786,14 +745,12 @@ class MessageService {
 
       // Ne pas marquer ses propres messages comme lus
       if (message.senderId === userId) {
-        console.log('⚠️ Utilisateur tente de marquer son propre message comme lu');
         return { success: false, message: 'Impossible de marquer ses propres messages comme lus' };
       }
 
       // Marquer comme lu
       const { readStatus, wasAlreadyRead } = await MessageRead.markAsRead(messageId, userId);
 
-      console.log(`✅ Message marqué comme lu (déjà lu: ${wasAlreadyRead})`);
       return { 
         success: true, 
         wasAlreadyRead,
@@ -801,7 +758,6 @@ class MessageService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur markMessageAsRead:', error);
       throw new Error(error.message || 'Erreur lors du marquage du message');
     }
   }
@@ -809,7 +765,6 @@ class MessageService {
   // 👁️ MARQUER TOUS LES MESSAGES D'UNE CONVERSATION COMME LUS
   async markConversationAsRead(conversationId, userId, lastMessageId = null) {
     try {
-      console.log(`👁️ Marquage conversation ${conversationId} comme lue par ${userId}`);
 
       // Vérifier que la conversation existe et que l'utilisateur est membre
       const conversation = await Conversation.findByPk(conversationId);
@@ -841,7 +796,6 @@ class MessageService {
         attributes: ['id']
       });
 
-      console.log(`📊 ${unreadMessages.length} messages à marquer comme lus`);
 
       let markedCount = 0;
       for (const message of unreadMessages) {
@@ -851,11 +805,9 @@ class MessageService {
         }
       }
 
-      console.log(`✅ ${markedCount} nouveaux messages marqués comme lus`);
       return { success: true, markedCount, totalProcessed: unreadMessages.length };
 
     } catch (error) {
-      console.error('❌ Erreur markConversationAsRead:', error);
       throw new Error(error.message || 'Erreur lors du marquage de la conversation');
     }
   }
@@ -863,7 +815,6 @@ class MessageService {
   // 📊 OBTENIR LES STATUTS DE LECTURE POUR DES MESSAGES
   async getReadStatusForMessages(messageIds, userId) {
     try {
-      console.log(`📊 Récupération statuts lecture pour ${messageIds.length} messages`);
       
       const readStatuses = await MessageRead.getReadStatusForMessages(messageIds, userId);
       
@@ -876,7 +827,6 @@ class MessageService {
       return statusMap;
 
     } catch (error) {
-      console.error('❌ Erreur getReadStatusForMessages:', error);
       throw new Error(error.message || 'Erreur lors de la récupération des statuts');
     }
   }
@@ -885,10 +835,8 @@ class MessageService {
   async getMessageReadCount(messageId) {
     try {
       const count = await MessageRead.getMessageReadCount(messageId);
-      console.log(`📊 Message ${messageId}: ${count} lecteurs`);
       return count;
     } catch (error) {
-      console.error('❌ Erreur getMessageReadCount:', error);
       throw new Error('Erreur lors du comptage des lecteurs');
     }
   }
@@ -897,10 +845,8 @@ class MessageService {
   async getMessageReaders(messageId) {
     try {
       const readers = await MessageRead.getMessageReaders(messageId);
-      console.log(`👥 Message ${messageId}: ${readers.length} lecteurs`);
       return readers;
     } catch (error) {
-      console.error('❌ Erreur getMessageReaders:', error);
       throw new Error('Erreur lors de la récupération des lecteurs');
     }
   }
@@ -908,19 +854,15 @@ class MessageService {
   // 📋 OBTENIR LES MESSAGES NON LUS D'UNE CONVERSATION
   async getUnreadMessages(conversationId, userId) {
     try {
-      console.log(`📋 Récupération messages non lus conversation ${conversationId} pour ${userId}`);
       
       const unreadMessages = await MessageRead.getUnreadMessagesInConversation(conversationId, userId);
-      console.log(`📊 ${unreadMessages.length} messages non lus`);
       
       return unreadMessages;
     } catch (error) {
-      console.error('❌ Erreur getUnreadMessages:', error);
       throw new Error('Erreur lors de la récupération des messages non lus');
     }
   }
 }
 
-console.log('✅ MessageService créé');
 
 module.exports = new MessageService();

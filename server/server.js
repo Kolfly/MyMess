@@ -29,7 +29,6 @@ require('./models/associations');
 // CRÉATION DE L'APPLICATION ET DU SERVEUR
 // ================================================
 
-console.log('🚀 Initialisation du serveur de chat...');
 
 // Création de l'application Express - c'est le cœur de notre API REST
 const app = express();
@@ -37,9 +36,6 @@ const app = express();
 // Création du serveur HTTP qui va héberger à la fois Express ET Socket.io
 // Cette approche unifié nous permet d'avoir REST et WebSocket sur le même port
 const server = http.createServer(app);
-
-console.log('✅ Application Express créée');
-console.log('✅ Serveur HTTP initialisé');
 
 // ================================================
 // CONFIGURATION DES MIDDLEWARES GLOBAUX
@@ -90,7 +86,6 @@ app.use(express.urlencoded({
   limit: '10mb' 
 }));
 
-console.log('✅ Middlewares de base configurés');
 
 // ================================================
 // MIDDLEWARES DE SÉCURITÉ
@@ -108,7 +103,6 @@ app.use((req, res, next) => {
   next();
 });
 
-console.log('✅ Middlewares de sécurité appliqués');
 
 // ================================================
 // CONFIGURATION DE SOCKET.IO
@@ -126,7 +120,6 @@ const io = socketIo(server, {
   pingInterval: 25000    // Intervalle de vérification de connexion (25 secondes)
 });
 
-console.log('✅ Socket.io configuré et prêt');
 
 // ================================================
 // GESTIONNAIRE SOCKET.IO COMPLET
@@ -141,7 +134,6 @@ const socketHandler = new SocketHandler(io);
 global.io = io;
 global.socketHandler = socketHandler;
 
-console.log('✅ Gestionnaire Socket.io complet configuré');
 
 // ================================================
 // ROUTES DE TEST ET DE DIAGNOSTIC
@@ -211,7 +203,6 @@ app.get('/info', (req, res) => {
   });
 });
 
-console.log('✅ Routes de test configurées');
 
 // ================================================
 // ROUTES D'API PRINCIPALES
@@ -345,10 +336,6 @@ app.get('/api/routes', (req, res) => {
   });
 });
 
-console.log('✅ Routes API configurées');
-console.log('   📝 /api/auth/* - Authentification et gestion des comptes');
-console.log('   👥 /api/users/* - Gestion des profils utilisateur');
-console.log('   💬 /api/messages/* - Envoi et réception de messages');
 
 // ================================================
 // MIDDLEWARE DE LOGGING DES REQUÊTES
@@ -371,9 +358,7 @@ app.use((req, res, next) => {
     
     // Logger différemment selon le type de réponse
     if (res.statusCode >= 400) {
-      console.error('❌ Erreur de requête:', JSON.stringify(logData));
     } else if (process.env.NODE_ENV === 'development') {
-      console.log('📝 Requête traitée:', JSON.stringify(logData));
     }
   });
   
@@ -390,7 +375,6 @@ app.use(notFoundHandler);
 // Middleware global de gestion des erreurs
 app.use(errorHandler);
 
-console.log('✅ Gestion des erreurs configurée');
 
 // ================================================
 // GESTION PROPRE DE LA FERMETURE DU SERVEUR
@@ -402,27 +386,21 @@ process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
 
 async function gracefulShutdown(signal) {
-  console.log(`\n📴 Signal ${signal} reçu. Arrêt propre du serveur...`);
   
   try {
     // Fermer les connexions Socket.io
     io.close(() => {
-      console.log('✅ Connexions WebSocket fermées');
     });
     
     // Fermer les connexions à la base de données
     await sequelize.close();
-    console.log('✅ Connexions base de données fermées');
     
     // Fermer le serveur HTTP
     server.close(() => {
-      console.log('✅ Serveur HTTP fermé');
-      console.log('👋 Arrêt propre terminé');
       process.exit(0);
     });
     
   } catch (error) {
-    console.error('❌ Erreur lors de l\'arrêt propre:', error);
     process.exit(1);
   }
 }
@@ -436,13 +414,11 @@ const PORT = process.env.PORT || 3000;
 // Fonction de démarrage qui gère les erreurs potentielles
 async function startServer() {
   try {
-    console.log('\n🔄 Finalisation du démarrage...');
     
     // ================================================
     // SYNCHRONISATION DE LA BASE DE DONNÉES
     // ================================================
     
-    console.log('🔄 Synchronisation de la base de données...');
     
     try {
       // Mode sûr maintenant que les tables existent
@@ -451,53 +427,25 @@ async function startServer() {
         logging: false   // Désactiver le logging pour éviter les erreurs
       });
       
-      console.log('✅ Tables synchronisées avec succès:');
-      console.log('   📋 users - Utilisateurs du système');
-      console.log('   💬 conversations - Chats privés et groupes');
-      console.log('   📨 messages - Messages des conversations');
-      console.log('   👥 conversation_members - Membres des conversations');
       
     } catch (error) {
-      console.log('⚠️  Erreur de synchronisation, utilisation du script manuel...');
       
       // Fallback sur l'initialisation manuelle si sync échoue
       const { initializeDatabase, safeInitializeDatabase } = require('./database/init-database');
       
       // Utiliser la version sécurisée par défaut
       if (process.env.FORCE_DB_RESET === 'true') {
-        console.log('⚠️  FORCE_DB_RESET détecté - Réinitialisation complète');
         await initializeDatabase(true);
-        console.log('✅ Base de données réinitialisée complètement');
       } else {
-        console.log('🔒 Mode sécurisé - Préservation des données');
         await safeInitializeDatabase();
-        console.log('✅ Base de données initialisée en mode sécurisé');
       }
     }
     
     // Démarrer l'écoute sur le port configuré
     server.listen(PORT, () => {
-      console.log('\n🎉 SERVEUR CHAT DÉMARRÉ AVEC SUCCÈS !');
-      console.log('┌─────────────────────────────────────────────┐');
-      console.log(`│  🌐 URL:              http://localhost:${PORT}    │`);
-      console.log(`│  📊 Base de données:  PostgreSQL (connectée) │`);
-      console.log(`│  🔌 WebSocket:        Socket.io (actif)      │`);
-      console.log(`│  🛡️  Sécurité:        CORS configuré         │`);
-      console.log(`│  📝 Logging:          Actif                  │`);
-      console.log('└─────────────────────────────────────────────┘');
-      console.log('\n📍 ENDPOINTS DE TEST DISPONIBLES:');
-      console.log(`   🏠 Accueil:      http://localhost:${PORT}/`);
-      console.log(`   ❤️  Santé:       http://localhost:${PORT}/health`);
-      console.log(`   ℹ️  Information:  http://localhost:${PORT}/info`);
-      console.log(`   🔌 WebSocket:    ws://localhost:${PORT}`);
-      console.log('\n✨ Le serveur est prêt à recevoir des connexions !');
-      console.log('💡 Astuce: Ouvre http://localhost:' + PORT + ' dans ton navigateur pour tester\n');
     });
     
   } catch (error) {
-    console.error('\n💥 ERREUR CRITIQUE LORS DU DÉMARRAGE:');
-    console.error('Message:', error.message);
-    console.error('Stack:', error.stack);
     process.exit(1);
   }
 }
@@ -512,18 +460,13 @@ startServer();
 // Ces gestionnaires capturent les erreurs qui pourraient échapper
 // à notre gestion normale et évitent que le serveur crash brutalement
 process.on('uncaughtException', (error) => {
-  console.error('💥 ERREUR NON CAPTURÉE:', error);
-  console.error('Stack:', error.stack);
   gracefulShutdown('UNCAUGHT_EXCEPTION');
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('💥 PROMESSE REJETÉE NON GÉRÉE:', reason);
-  console.error('Promise:', promise);
   gracefulShutdown('UNHANDLED_REJECTION');
 });
 
-console.log('✅ Gestionnaires d\'erreurs globaux configurés');
 
 // ================================================
 // EXPORTS POUR LES TESTS (OPTIONNEL)

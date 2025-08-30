@@ -7,7 +7,6 @@ const Message = require('./Message');
 const ConversationMember = require('./ConversationMember');
 const MessageRead = require('./MessageRead');
 
-console.log('🔗 Configuration des associations entre modèles...');
 
 // ================================================
 // ASSOCIATIONS USER ↔ CONVERSATION (Many-to-Many via ConversationMember)
@@ -172,13 +171,6 @@ MessageRead.belongsTo(Message, {
   as: 'message'
 });
 
-console.log('✅ Associations configurées:');
-console.log('   👤 User ↔ Conversation (many-to-many via ConversationMember)');
-console.log('   💬 User ↔ Message (one-to-many)');
-console.log('   💬 Conversation ↔ Message (one-to-many)');
-console.log('   💬 Message ↔ Message (replies)');
-console.log('   👥 ConversationMember relations');
-console.log('   👁️ MessageRead relations (lecture des messages)');
 
 module.exports = {
   User,

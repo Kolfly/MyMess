@@ -186,6 +186,5 @@ Message.getUnreadCount = async function(conversationId, userId) {
   });
 };
 
-console.log('✅ Modèle Message défini');
 
 module.exports = Message;

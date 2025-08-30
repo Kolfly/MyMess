@@ -199,7 +199,6 @@ export class ProfileDialogComponent {
         },
         error: (error) => {
           this.isLoading.set(false);
-          console.error('Erreur mise à jour profil:', error);
           this.snackBar.open('Erreur lors de la mise à jour du profil', 'Fermer', {
             duration: 4000,
             panelClass: ['error-snackbar']

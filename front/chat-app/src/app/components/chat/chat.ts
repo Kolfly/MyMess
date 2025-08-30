@@ -115,7 +115,6 @@ export class Chat implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.authService.currentUser$.subscribe(user => {
         this.currentUser.set(user);
-        console.log('🔄 Utilisateur mis à jour dans le signal:', user);
       })
     );
     
@@ -167,10 +166,6 @@ export class Chat implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.websocketService.newMessage$.subscribe(message => {
         if (message) {
-          console.log('📨 Nouveau message reçu dans le composant:', message);
-          console.log('👤 Sender ID:', message.senderId);
-          console.log('👤 Current User ID:', this.currentUser()?.id);
-          console.log('🤔 Is current user message?', message.senderId === this.currentUser()?.id);
           
           const selectedConv = this.selectedConversation();
           // Ajouter le message seulement s'il appartient à la conversation active
@@ -180,12 +175,10 @@ export class Chat implements OnInit, OnDestroy {
             // Vérifier si le message existe déjà pour éviter les doublons
             const messageExists = currentMessages.some(m => m.id === message.id);
             if (!messageExists) {
-              console.log('➕ Ajout du nouveau message à la liste');
               this.messages.set([...currentMessages, message]);
               // Faire défiler vers le bas pour les nouveaux messages temps réel
               setTimeout(() => this.scrollToBottom(), 100);
             } else {
-              console.log('⚠️ Message déjà existant, ignoré');
             }
           }
         }
@@ -196,7 +189,6 @@ export class Chat implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.websocketService.conversationUpdate$.subscribe(update => {
         if (update) {
-          console.log('🔄 Mise à jour de conversation reçue:', update);
           // Recharger la liste des conversations pour récupérer les nouvelles
           this.loadConversations();
         }
@@ -218,7 +210,6 @@ export class Chat implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.websocketService.userStatusChanged$.subscribe(statusChange => {
         if (statusChange) {
-          console.log('🎨 Changement de statut reçu dans chat component:', statusChange);
           
           // Mettre à jour les statuts dans les conversations
           this.updateUserStatusInConversations(statusChange.userId, statusChange.status);
@@ -226,7 +217,6 @@ export class Chat implements OnInit, OnDestroy {
           // Si c'est notre propre statut qui change, forcer la mise à jour de currentUser
           const currentUserId = this.currentUser()?.id;
           if (statusChange.userId === currentUserId) {
-            console.log('🎨 Mon propre statut a changé, mise à jour de l\'indicateur personnel');
           }
         }
       })
@@ -259,7 +249,6 @@ export class Chat implements OnInit, OnDestroy {
         error: (error) => {
           this.isSearching.set(false);
           this.searchResults.set([]);
-          console.error('Erreur lors de la recherche:', error);
         }
       })
     );
@@ -278,7 +267,6 @@ export class Chat implements OnInit, OnDestroy {
         // Conversations chargées avec succès
       },
       error: (error) => {
-        console.error('❌ Erreur lors du chargement des conversations:', error);
       }
     });
   }
@@ -309,7 +297,6 @@ export class Chat implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.isLoadingMessages.set(false);
-        console.error('❌ Erreur lors du chargement des messages:', error);
       }
     });
   }
@@ -375,18 +362,10 @@ export class Chat implements OnInit, OnDestroy {
   }
   
   sendMessage(): void {
-    console.log('🔄 sendMessage appelé!');
-    console.log('📝 newMessage value:', this.newMessage);
-    
     const content = this.newMessage.trim();
     const selectedConv = this.selectedConversation();
     
-    console.log('📄 Contenu après trim:', content);
-    console.log('💬 Conversation sélectionnée:', selectedConv);
-    console.log('🔌 WebSocket connecté:', this.websocketService.isConnected());
-    
     if (content && selectedConv) {
-      console.log('✅ Conditions OK - envoi du message');
       
       // Arrêter l'indicateur de frappe lors de l'envoi
       if (this.isCurrentlyTyping) {
@@ -399,7 +378,6 @@ export class Chat implements OnInit, OnDestroy {
       }
       
       if (this.websocketService.isConnected()) {
-        console.log('📡 Envoi via WebSocket');
         this.websocketService.sendMessage(selectedConv.id, content);
         this.newMessage = '';
         
@@ -430,10 +408,8 @@ export class Chat implements OnInit, OnDestroy {
           setTimeout(() => this.scrollToBottom(), 100);
         }
       } else {
-        console.log('🌐 Envoi via HTTP');
         this.conversationService.sendMessage(selectedConv.id, content).subscribe({
           next: (response) => {
-            console.log('📥 Réponse HTTP:', response);
             if (response.success) {
               this.newMessage = '';
               this.loadMessages(selectedConv.id);
@@ -442,17 +418,10 @@ export class Chat implements OnInit, OnDestroy {
             }
           },
           error: (error) => {
-            console.error('❌ Erreur lors de l\'envoi du message:', error);
           }
         });
       }
     } else {
-      console.log('❌ Conditions non remplies:', {
-        hasContent: !!content,
-        hasConversation: !!selectedConv,
-        contentValue: content,
-        conversationId: selectedConv?.id
-      });
     }
   }
 
@@ -572,7 +541,6 @@ export class Chat implements OnInit, OnDestroy {
   }
   
   logout(): void {
-    console.log('🔄 Début du processus de déconnexion');
     
     const user = this.currentUser();
     if (!user) {
@@ -581,16 +549,13 @@ export class Chat implements OnInit, OnDestroy {
       return;
     }
 
-    console.log('🔄 Changement du statut vers "away" avant déconnexion');
     
     // Changer le statut vers "absent" avant de se déconnecter (US015)
     this.authService.updateProfile({ status: 'away' }).subscribe({
       next: (response) => {
-        console.log('✅ Statut changé vers "absent" avant déconnexion');
         this.performLogout();
       },
       error: (error) => {
-        console.warn('⚠️ Erreur lors du changement de statut, déconnexion quand même:', error);
         // Même en cas d'erreur, on procède à la déconnexion
         this.performLogout();
       }
@@ -598,21 +563,17 @@ export class Chat implements OnInit, OnDestroy {
   }
 
   private performLogout(): void {
-    console.log('🔌 Nettoyage des ressources avant déconnexion');
     
     // Nettoyer la WebSocket
     if (this.websocketService.isConnected()) {
       this.websocketService.disconnect();
-      console.log('🔌 WebSocket déconnectée');
     }
     
     // Nettoyer les subscriptions
     this.subscriptions.unsubscribe();
-    console.log('🧹 Subscriptions nettoyées');
     
     // Appeler la déconnexion du service Auth
     this.authService.logout();
-    console.log('👋 Déconnexion effectuée');
   }
 
   // ================================================
@@ -631,7 +592,6 @@ export class Chat implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result === true) {
-        console.log('✅ Profil utilisateur mis à jour avec succès');
       }
     });
   }
@@ -640,32 +600,24 @@ export class Chat implements OnInit, OnDestroy {
     const user = this.currentUser();
     if (!user) return;
 
-    console.log(`🔄 Changement de statut vers: ${status}`);
-    console.log(`🔄 Statut actuel de l'utilisateur:`, user.status);
 
     this.authService.updateProfile({ status }).subscribe({
       next: (response) => {
         if (response.success) {
-          console.log(`✅ Réponse serveur pour changement de statut:`, response);
-          console.log(`✅ Nouveau statut dans la réponse:`, response.data?.user?.status);
           
           this.snackBar.open(`Statut changé vers "${this.getStatusLabel(status)}"`, 'Fermer', {
             duration: 2000,
             panelClass: ['success-snackbar']
           });
-          console.log(`✅ Statut mis à jour vers: ${status}`);
           
           // Forcer la mise à jour du signal currentUser
           if (response.data?.user) {
             this.currentUser.set(response.data.user);
-            console.log(`🔄 Signal currentUser forcé avec:`, response.data.user);
           }
           
           // Vérifier que le currentUser a été mis à jour
           setTimeout(() => {
             const updatedUser = this.currentUser();
-            console.log(`🎨 Statut après mise à jour:`, updatedUser?.status);
-            console.log(`🎨 Couleur du statut:`, this.getStatusColor(updatedUser?.status));
           }, 100);
         } else {
           this.snackBar.open('Erreur lors du changement de statut', 'Fermer', {
@@ -675,7 +627,6 @@ export class Chat implements OnInit, OnDestroy {
         }
       },
       error: (error) => {
-        console.error('❌ Erreur changement de statut:', error);
         this.snackBar.open('Erreur lors du changement de statut', 'Fermer', {
           duration: 3000,
           panelClass: ['error-snackbar']
@@ -695,7 +646,6 @@ export class Chat implements OnInit, OnDestroy {
 
   getStatusClass(status: string | undefined): string {
     const currentStatus = status || 'online';
-    console.log('🎨 Status class:', currentStatus, 'for status:', status);
     return currentStatus; // Retourne 'online', 'away', ou 'busy'
   }
 
@@ -704,27 +654,22 @@ export class Chat implements OnInit, OnDestroy {
     if (!user) return '?';
 
     const displayName = user.displayName || user.username || '';
-    console.log('🎨 Getting initials for current user:', displayName);
     
     // Si on a un nom d'affichage avec des espaces, prendre les premières lettres des mots
     if (displayName.includes(' ')) {
       const words = displayName.split(' ').filter((word: string) => word.length > 0);
       const initials = words.slice(0, 2).map((word: string) => word[0]).join('').toUpperCase();
-      console.log('🎨 Current user initials (words):', initials);
       return initials;
     }
     
     // Sinon, prendre les 2 premières lettres
     const initials = displayName.substring(0, 2).toUpperCase();
-    console.log('🎨 Current user initials (substring):', initials);
     return initials;
   }
 
   getStatusColor(status: string | undefined): string {
     const currentStatus = status || 'online';
-    console.log('🎨 Status color requested for:', currentStatus);
     const color = this.getColorByStatus(currentStatus);
-    console.log('🎨 Returning color:', color, 'for status:', currentStatus);
     return color;
   }
 
@@ -756,7 +701,6 @@ export class Chat implements OnInit, OnDestroy {
     const otherUser = conversation.allMembers?.find(member => member.userId !== currentUserId);
     
     if (otherUser?.user?.status) {
-      console.log('🎨 Conversation user status:', otherUser.user.status, 'for user:', otherUser.user.displayName);
       return this.getColorByStatus(otherUser.user.status);
     }
     
@@ -765,7 +709,6 @@ export class Chat implements OnInit, OnDestroy {
   }
 
   updateUserStatusInConversations(userId: string, newStatus: string): void {
-    console.log('🎨 Mise à jour statut dans conversations:', userId, newStatus);
     
     const currentConversations = this.conversations();
     const updatedConversations = currentConversations.map(conversation => {
@@ -774,7 +717,6 @@ export class Chat implements OnInit, OnDestroy {
         // Vérifier si l'utilisateur modifié est dans cette conversation
         const updatedMembers = conversation.allMembers?.map(member => {
           if (member.userId === userId) {
-            console.log('✅ Mise à jour statut pour membre:', member.user.displayName, 'vers:', newStatus);
             return {
               ...member,
               user: {
@@ -798,7 +740,6 @@ export class Chat implements OnInit, OnDestroy {
 
     // Mettre à jour la liste des conversations si des changements ont été faits
     if (JSON.stringify(currentConversations) !== JSON.stringify(updatedConversations)) {
-      console.log('🔄 Liste des conversations mise à jour avec nouveaux statuts');
       this.conversations.set(updatedConversations);
     }
   }
@@ -863,7 +804,6 @@ export class Chat implements OnInit, OnDestroy {
           duration: 5000,
           panelClass: ['error-snackbar']
         });
-        console.error('Erreur lors de la création de la conversation:', error);
       }
     });
   }
@@ -884,18 +824,11 @@ export class Chat implements OnInit, OnDestroy {
     this.conversationService.getPendingConversations().subscribe({
       next: (response) => {
         if (response.success) {
-          console.log('🔍 DEBUG - Conversations en attente:', response.data.conversations);
-          console.log('🔍 DEBUG - Utilisateur actuel:', this.currentUser());
-          
-          response.data.conversations.forEach((conv: any) => {
-            console.log(`🔍 DEBUG - Conversation ${conv.id}: createdBy=${conv.createdBy}, currentUser=${this.currentUser()?.id}`);
-          });
           
           this.pendingConversations.set(response.data.conversations);
         }
       },
       error: (error) => {
-        console.error('❌ Erreur lors du chargement des demandes:', error);
       }
     });
   }
@@ -1008,7 +941,6 @@ export class Chat implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.isLoadingUsers.set(false);
-        console.error('Erreur lors du chargement des utilisateurs:', error);
         this.snackBar.open('Erreur lors du chargement des utilisateurs', 'Fermer', {
           duration: 5000,
           panelClass: ['error-snackbar']
@@ -1034,7 +966,6 @@ export class Chat implements OnInit, OnDestroy {
         },
         error: (error) => {
           this.isLoadingUsers.set(false);
-          console.error('Erreur lors de la recherche:', error);
         }
       });
     } else {
@@ -1139,7 +1070,6 @@ export class Chat implements OnInit, OnDestroy {
         this.isLoadingGroupDetails.set(false);
       },
       error: (error) => {
-        console.error('Erreur chargement détails groupe:', error);
         this.snackBar.open('Erreur lors du chargement des détails', 'Fermer', {
           duration: 3000,
           panelClass: ['error-snackbar']
@@ -1389,7 +1319,6 @@ export class Chat implements OnInit, OnDestroy {
             }
           },
           error: (error) => {
-            console.error('❌ Erreur suppression conversation:', error);
             this.snackBar.open('Erreur lors de la suppression de la conversation', 'Fermer', {
               duration: 3000,
               panelClass: ['error-snackbar']
@@ -1437,7 +1366,6 @@ export class Chat implements OnInit, OnDestroy {
             }
           },
           error: (error) => {
-            console.error('❌ Erreur en quittant le groupe:', error);
             this.snackBar.open('Erreur lors de la sortie du groupe', 'Fermer', {
               duration: 3000,
               panelClass: ['error-snackbar']

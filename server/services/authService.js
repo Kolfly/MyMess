@@ -18,7 +18,6 @@ class AuthenticationService {
     const { username, email, password, firstName, lastName } = userData;
 
     try {
-      console.log('🔄 Tentative de création de compte pour:', email);
 
       // Étape 1: Vérifications préalables de sécurité et d'unicité
       await this.validateUniqueCredentials(email, username);
@@ -41,7 +40,6 @@ class AuthenticationService {
         failedLoginAttempts: 0
       });
 
-      console.log('✅ Utilisateur créé avec succès:', user.id);
 
       // Étape 5: Générer une paire de tokens pour connecter automatiquement l'utilisateur
       const tokens = generateTokenPair(user.id, {
@@ -59,7 +57,6 @@ class AuthenticationService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur création compte:', error.message);
       
       // Transformer les erreurs techniques en messages utilisateur compréhensibles
       if (error.name === 'SequelizeValidationError') {
@@ -114,7 +111,6 @@ class AuthenticationService {
   // Authentifier un utilisateur avec email et mot de passe
   async authenticateUser(email, password, loginMetadata = {}) {
     try {
-      console.log('🔄 Tentative de connexion pour:', email);
 
       // Étape 1: Récupérer l'utilisateur par email
       const user = await User.findOne({ 
@@ -125,7 +121,6 @@ class AuthenticationService {
       });
 
       if (!user) {
-        console.log('❌ Tentative de connexion avec email inexistant:', email);
         // Message volontairement vague pour ne pas révéler l'existence du compte
         throw new Error('Identifiants invalides');
       }
@@ -133,7 +128,6 @@ class AuthenticationService {
       // Étape 2: Vérifier si le compte est temporairement bloqué
       if (user.isLocked()) {
         const unlockTime = new Date(user.lockedUntil).toLocaleString('fr-FR');
-        console.log('🔒 Tentative de connexion sur compte bloqué:', email, 'jusqu\'à', unlockTime);
         throw new Error(`Compte temporairement bloqué suite à des tentatives de connexion suspectes. Réessayez après ${unlockTime}`);
       }
 
@@ -141,7 +135,6 @@ class AuthenticationService {
       const isPasswordValid = await this.verifyPassword(password, user.password);
 
       if (!isPasswordValid) {
-        console.log('❌ Mot de passe incorrect pour:', email);
         
         // Incrémenter les tentatives échouées AVANT de lever l'erreur
         await user.incrementFailedAttempts();
@@ -158,7 +151,6 @@ class AuthenticationService {
         lastLogin: user.lastLogin.toISOString()
       });
 
-      console.log('✅ Connexion réussie pour:', email);
 
       return {
         success: true,
@@ -168,7 +160,6 @@ class AuthenticationService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur connexion pour', email, ':', error.message);
       throw error;
     }
   }
@@ -204,7 +195,6 @@ class AuthenticationService {
       // 12 est un bon compromis entre sécurité et performance en 2024
       const saltRounds = 12;
       
-      console.log('🔐 Hashage du mot de passe avec', saltRounds, 'rounds...');
       const hashedPassword = await bcrypt.hash(plainPassword, saltRounds);
       
       // Vérifier que le hashage s'est bien passé
@@ -215,7 +205,6 @@ class AuthenticationService {
       return hashedPassword;
       
     } catch (error) {
-      console.error('❌ Erreur hashage mot de passe:', error);
       throw new Error('Impossible de sécuriser le mot de passe');
     }
   }
@@ -227,13 +216,11 @@ class AuthenticationService {
         return false;
       }
       
-      console.log('🔍 Vérification du mot de passe...');
       const isValid = await bcrypt.compare(plainPassword, hashedPassword);
       
       return isValid;
       
     } catch (error) {
-      console.error('❌ Erreur vérification mot de passe:', error);
       return false; // En cas d'erreur, refuser l'accès par sécurité
     }
   }
@@ -241,7 +228,6 @@ class AuthenticationService {
   // Changer le mot de passe d'un utilisateur (nécessite l'ancien mot de passe)
   async changePassword(userId, currentPassword, newPassword) {
     try {
-      console.log('🔄 Demande de changement de mot de passe pour utilisateur:', userId);
 
       // Récupérer l'utilisateur
       const user = await User.findByPk(userId);
@@ -252,7 +238,6 @@ class AuthenticationService {
       // Vérifier l'ancien mot de passe
       const isCurrentPasswordValid = await this.verifyPassword(currentPassword, user.password);
       if (!isCurrentPasswordValid) {
-        console.log('❌ Ancien mot de passe incorrect pour:', userId);
         throw new Error('Mot de passe actuel incorrect');
       }
 
@@ -265,7 +250,6 @@ class AuthenticationService {
         updatedAt: new Date()
       });
 
-      console.log('✅ Mot de passe changé avec succès pour:', userId);
 
       return {
         success: true,
@@ -273,7 +257,6 @@ class AuthenticationService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur changement mot de passe:', error.message);
       throw error;
     }
   }
@@ -297,7 +280,6 @@ class AuthenticationService {
         lastSeen: new Date()
       });
 
-      console.log('✅ Déconnexion réussie pour utilisateur:', userId);
 
       return {
         success: true,
@@ -305,7 +287,6 @@ class AuthenticationService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur déconnexion:', error.message);
       throw error;
     }
   }
@@ -384,20 +365,16 @@ class AuthenticationService {
         const validStatuses = ['online', 'offline', 'away', 'busy'];
         if (validStatuses.includes(status)) {
           updateFields.status = status;
-          console.log('🔄 Changement de statut vers:', status, 'pour utilisateur:', userId);
         } else {
-          console.warn('⚠️ Statut invalide ignoré:', status);
         }
       }
 
       // Mettre à jour les champs autorisés
       const updatedUser = await user.update(updateFields);
 
-      console.log('✅ Profil mis à jour pour utilisateur:', userId);
 
       // Si le statut a changé, notifier via WebSocket
       if (status !== undefined && global.socketHandler) {
-        console.log('📡 Diffusion du changement de statut via WebSocket');
         global.socketHandler.broadcastUserStatusChange(userId, status, updatedUser.displayName || updatedUser.username);
       }
 
@@ -408,7 +385,6 @@ class AuthenticationService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur mise à jour profil:', error.message);
       throw error;
     }
   }
@@ -451,7 +427,6 @@ class AuthenticationService {
   // Vérifier l'adresse email d'un utilisateur avec le token de vérification
   async verifyUserEmail(emailVerificationToken) {
     try {
-      console.log('🔄 Tentative de vérification d\'email avec token:', emailVerificationToken.substring(0, 8) + '...');
 
       // Rechercher l'utilisateur avec ce token de vérification
       const user = await User.findOne({
@@ -466,7 +441,6 @@ class AuthenticationService {
       }
 
       if (user.emailVerified) {
-        console.log('⚠️  Email déjà vérifié pour utilisateur:', user.id);
         return {
           success: true,
           user: user.toPublicJSON(),
@@ -481,7 +455,6 @@ class AuthenticationService {
         updatedAt: new Date()
       });
 
-      console.log('✅ Email vérifié avec succès pour utilisateur:', user.id);
 
       return {
         success: true,
@@ -490,7 +463,6 @@ class AuthenticationService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur vérification email:', error.message);
       throw error;
     }
   }
@@ -518,7 +490,6 @@ class AuthenticationService {
         updatedAt: new Date()
       });
 
-      console.log('✅ Nouveau token de vérification généré pour:', email);
 
       return {
         success: true,

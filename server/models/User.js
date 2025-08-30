@@ -422,7 +422,6 @@ User.prototype.incrementFailedAttempts = async function() {
   // Ces valeurs peuvent être ajustées selon tes besoins de sécurité
   if (this.failedLoginAttempts >= 5) {
     this.lockedUntil = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
-    console.log(`⚠️  Compte ${this.email} temporairement bloqué après ${this.failedLoginAttempts} tentatives échouées`);
   }
   
   return await this.save();
@@ -438,7 +437,6 @@ User.prototype.resetFailedAttempts = async function() {
   this.lastLogin = new Date();
   
   if (previousAttempts > 0) {
-    console.log(`✅ Connexion réussie pour ${this.email}, remise à zéro de ${previousAttempts} tentatives échouées`);
   }
   
   return await this.save();

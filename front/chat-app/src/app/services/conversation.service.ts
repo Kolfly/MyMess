@@ -202,7 +202,6 @@ export class ConversationService {
   // ================================================
 
   updateConversationLastMessage(conversationId: string, message: Message): void {
-    console.log('🔄 Updating last message for conversation:', conversationId, 'from:', message.sender?.displayName || message.sender?.username);
     
     const currentConversations = this.conversationsSubject.value;
     
@@ -222,10 +221,8 @@ export class ConversationService {
     const otherConvs = conversations.filter(c => c.id !== conversationId);
     
     if (updatedConv) {
-      console.log('✅ Conversation list updated');
       this.conversationsSubject.next([updatedConv, ...otherConvs]);
     } else {
-      console.warn('⚠️ Could not find conversation to update:', conversationId);
     }
   }
 
@@ -442,7 +439,6 @@ export class ConversationService {
   // ================================================
 
   private handleError = (error: any) => {
-    console.error('❌ Erreur ConversationService:', error);
     return throwError(() => error);
   };
 }
